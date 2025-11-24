@@ -1,0 +1,349 @@
+:root{
+  --header-height: 64px;
+  --header-width: 64px;
+  --radius-large: 18px;
+  --radius-small: 12px;
+  --accent: #0ea5a4; /* thay đổi màu ở đây */
+  --bg: #0f172a;
+  --fg: #000000;
+}
+
+/* Reset dành cho demo */
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+main{padding:20px}
+
+ /*Container để header có thể fixed mọi nơi */
+.dynamic-header{
+  position: fixed;
+  top: 12px; /* mặc định ở trên */
+  left: 50%;
+  transform: translateX(-50%);
+  height: var(--header-height);
+  min-height: 48px;
+  width: calc(60vw);
+  max-width: 1100px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:8px 14px;
+  box-sizing: border-box;
+
+  background: linear-gradient(135deg, rgba(14,165,164,0.12), rgba(255,255,255,0.02));
+  color:var(--fg);
+  backdrop-filter: blur(6px) saturate(120%);
+  border-radius: var(--radius-large);
+  box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
+  cursor: grab;
+  z-index:9999;
+  transition: width 220ms ease, height 220ms ease, transform 180ms ease, border-radius 180ms ease;
+  user-select: none;
+}
+
+.dynamic-header.dragging{cursor:grabbing; transition: none !important; }
+.dynamic-header * {
+  mix-blend-mode: difference;
+}
+
+/* content bên trong */
+.dh__logo{
+  display:flex;align-items:center;gap:10px;flex-shrink:0
+}
+.dh__logo .dot{width:40px;height:40px;border-radius:10px;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;color:var(--bg);font-weight:700}
+.dh__title{font-weight:700;font-size:24px}
+.dh__subtitle{font-size:12px;opacity:0.85}
+
+.dh__spacer{flex:1}
+
+.dh__controls{display:flex;gap:8px;align-items:center}
+.dh__btn{padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.03);font-size:13px}
+
+/* handle để kéo (khu vực nhỏ bên phải) */
+.dh__handle{
+  width:36px;height:36px;border-radius:10px;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.02);cursor:grab;flex-shrink:0;
+}
+
+/* Shapes khi dock vào cạnh */
+.dock-top{ left: 50%; transform: translateX(-50%); width: calc(60vw); max-width:1100px; height:var(--header-height); border-radius: var(--radius-large); }
+.dock-bottom{ left:50%; transform: translateX(-50%); bottom:12px; top: auto; width: calc(60vw); max-width:1100px; height:var(--header-height); border-radius: var(--radius-large); }
+.dock-left{ top:50%; left:12px; transform: translateY(-50%); width: var(--header-width); height: calc(60vh); max-height: 700px; border-radius: var(--radius-large); flex-direction:column; padding:12px; }
+.dock-right{ top:50%; right:12px; left:auto; transform: translateY(-50%); width: var(--header-width); height: calc(60vh); max-height:700px; border-radius: var(--radius-large); flex-direction:column; padding:12px; }
+
+/* Khi đứng dọc: điều chỉnh phần tử bên trong */
+.dock-left .dh__logo .dot, .dock-right .dh__logo .dot{width:48px;height:48px;border-radius:12px}
+.dock-left .dh__title, .dock-right .dh__title{writing-mode: vertical-rl; transform: rotate(180deg); font-size:14px; display: none}
+.dock-left .dh__subtitle,.dock-right .dh__subtitle{display:none}
+.dock-left .dh__controls,.dock-right .dh__controls{display:flex;flex-direction:column;gap:8px}
+
+/* Small screens */
+@media (max-width:640px){
+  .dynamic-header{ width: calc(92vw); }
+  /*.dock-left, .dock-right{ display:none; } !* ẩn dọc trên mobile để tránh che nội dung *!*/
+  .dh__title {font-size: 16px}
+  .dh__handle {display: flex; font-size: 20px; justify-content: center; align-items: center}
+}
+/*in menu*/
+.dh__menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 16px;
+}
+
+.dh__menu li a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.03);
+  font-size: 16px;
+  color: #000000;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.dh__menu li a:hover {
+  background: rgba(255, 255, 255, 0);
+  transform: translateY(-1px);
+}
+
+.dh__menu li a i {
+  font-size: 18px;
+  display: inline-block;
+}
+
+/* Khi header dock sang trái/phải → ẩn text, chỉ còn icon */
+.dock-left .dh__menu li a span,
+.dock-right .dh__menu li a span {
+  display: none;
+}
+
+.dock-left .dh__logo,
+.dock-right .dh__logo {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.dock-left .dh__menu,
+.dock-right .dh__menu {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.dock-left .dh__menu li a,
+.dock-right .dh__menu li a {
+  justify-content: center;
+  width: 100%;
+  padding: 10px 0;
+}
+
+/* Tooltip khi ở chế độ dock trái/phải */
+.dock-left .dh__menu li a::after,
+.dock-right .dh__menu li a::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(10px);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Với dock phải, tooltip hiện bên trái */
+.dock-right .dh__menu li a::after {
+  left: auto;
+  right: 100%;
+  transform: translateY(-50%) translateX(-10px);
+}
+
+/* Khi hover vào icon → hiện tooltip */
+.dock-left .dh__menu li a:hover::after,
+.dock-right .dh__menu li a:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Mặc định: hiển thị menu bình thường */
+/*.dh__menu {*/
+/*  display: flex;*/
+/*  list-style: none;*/
+/*  padding: 0;*/
+/*  margin: 0;*/
+/*  transition: max-height 0.3s ease, opacity 0.3s ease;*/
+/*}*/
+
+/* Ẩn menu trên thiết bị nhỏ */
+@media (max-width: 768px) {
+  .dh__menu {
+    flex-direction: column;
+    position: absolute;
+    top: 80px; /* dưới thanh handle */
+    left: 0;
+    width: 100%;
+    background: rgba(180, 180, 180, 0.41);
+    border-radius: 12px;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Khi mở */
+  .dh__menu.active {
+    max-height: 500px;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .dh__menu li a {
+    display: flex;
+    padding: 12px 16px;
+    text-align: center;
+    width: 100%;
+    /*display: block;*/
+    gap: 10px
+  }
+
+  /* Ẩn chữ, chỉ hiện icon khi menu đóng */
+  .dh__menu:not(.active) .hv_left_right {
+    display: none;
+  }
+
+  /* Căn giữa handle */
+  .dh__handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+  }
+}
+
+.user-dropdown {
+  position: relative;
+}
+
+/* menu con */
+.user-dropdown .user-menu {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  padding: 5px 0;
+  list-style: none;
+  min-width: 160px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.25s ease;
+  z-index: 1000;
+
+  /* --- Hiệu ứng kính mờ (frosted glass) --- */
+  background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.dock-left .user-dropdown .user-menu {
+  top: auto;
+  bottom: 10px;
+  left: 40px;
+}
+.dock-right .user-dropdown .user-menu {
+  top: auto;
+  bottom: 10px;
+  right: 40px;
+}
+.dock-bottom .user-dropdown .user-menu {
+  top: auto;
+  bottom: 40px;
+}
+
+.user-dropdown .user-menu li a {
+  display: block;
+  padding: 8px 14px;
+  color: black;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.user-dropdown .user-menu li a:hover {
+  background: #f2f2f2;
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .user-dropdown:hover .user-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+/* MOBILE: click để mở */
+@media (max-width: 768px) {
+  .user-dropdown .user-menu {
+    position: fixed;
+    top: auto;
+    right: auto;
+    min-width: 180px;
+    border-radius: 10px;
+  }
+
+  .user-dropdown .user-menu a {
+    text-align: left;
+  }
+
+  .user-dropdown.active .user-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+.user-avatar-hd {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+  transition: all 0.3s ease;
+}
+
+.user-avatar-hd:hover {
+  border-color: #007bff;
+  transform: scale(1.1);
+}
+
+.fa-user {
+  font-size: 18px;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.fa-user:hover {
+  color: #007bff;
+}
