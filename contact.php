@@ -1,4 +1,5 @@
 <?php
+session_start();
 ?>
 
 <!doctype html>
@@ -31,6 +32,7 @@
 </head>
 
 <?php include 'header.php'?>
+<?php include 'cornerButton.php'?>
 
 <body>
 
@@ -110,8 +112,7 @@
               </div>
               <div class="info-content">
                 <h4>Địa chỉ</h4>
-                <p>123 Trần Duy Hưng, Cầu Giấy, Hà Nội</p>
-                <p>456 Nguyễn Văn Linh, Quận 7, TP.HCM</p>
+                <p>Nguyễn Sinh Sắc - Đà Nẵng</p>
               </div>
             </div>
 
@@ -121,9 +122,7 @@
               </div>
               <div class="info-content">
                 <h4>Điện thoại</h4>
-                <p>Hà Nội: <a href="tel:02412345678">024 1234 5678</a></p>
-                <p>TP.HCM: <a href="tel:02887654321">028 8765 4321</a></p>
-                <p>Hotline: <a href="tel:18001234" class="hotline">1800 1234</a></p>
+                <p>Đà Nẵng: <a href="tel:02412345678">024 1234 5678</a></p>
               </div>
             </div>
 
@@ -134,7 +133,6 @@
               <div class="info-content">
                 <h4>Email</h4>
                 <p><a href="mailto:support@techstore.vn">support@techstore.vn</a></p>
-                <p><a href="mailto:sales@techstore.vn">sales@techstore.vn</a></p>
               </div>
             </div>
 

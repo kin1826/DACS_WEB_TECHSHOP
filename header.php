@@ -1,8 +1,9 @@
 <?php
 $isLoggedIn = isset($_SESSION['user_id']);
-$username = $isLoggedIn ? (isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User') : '';
-$userAvatar = $isLoggedIn ? (isset($_SESSION['user_avatar']) ? $_SESSION['user_avatar'] : '') : '';
-$userEmail = $isLoggedIn ? (isset($_SESSION['user_email']) ? $_SESSION['user_email'] : '') : '';
+$username = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : '';
+$userAvatar = $isLoggedIn ? ($_SESSION['user_avatar'] ?? '') : '';
+$userEmail = $isLoggedIn ? ($_SESSION['user_email'] ?? '') : '';
+$isAdmin = $isLoggedIn ? ($_SESSION['is_admin'] ?? '') : '';
 ?>
 
 <!doctype html>
@@ -16,6 +17,7 @@ $userEmail = $isLoggedIn ? (isset($_SESSION['user_email']) ? $_SESSION['user_ema
 <body>
 
 <!-- Header component -->
+
 <header id="dynamicHeader" class="dynamic-header" role="banner" aria-label="Thanh điều hướng động">
   <a href="index.php" class="dh__logo" style="text-decoration: none; color: black">
     <div class="dot">HB</div>
@@ -77,26 +79,41 @@ $userEmail = $isLoggedIn ? (isset($_SESSION['user_email']) ? $_SESSION['user_ema
                 <div class="user-email"><?php echo htmlspecialchars($userEmail); ?></div>
               <?php endif; ?>
             </li>
-            <li><a href="account.php">Trang cá nhân</a></li>
-            <li><a href="account.php?tab=orders">Đơn hàng</a></li>
-            <li><a href="settings.php">Cài đặt</a></li>
-            <li><a href="logout.php" style="color: red">Đăng xuất</a></li>
+            <li><a href="account.php" class="user-menu-text"><i class="fa-solid fa-address-card"></i>Trang cá nhân</a></li>
+            <li><a href="account.php?tab=orders"><i class="fa-solid fa-box"></i>Đơn hàng</a></li>
+            <li><a href="settings.php"><i class="fa-solid fa-gear"></i>Cài đặt</a></li>
+
+            <?php if ($isAdmin === "1"): ?>
+              <li><a href="admin.php"><i class="fa-solid fa-user"></i>Trang quản trị viên</a></li>
+            <?php endif; ?>
+
+            <li><a href="logout.php" style="color: red"><i class="fa-solid fa-right-to-bracket"></i>Đăng xuất</a></li>
           <?php else: ?>
             <!-- Chưa đăng nhập - hiển thị menu đăng nhập -->
             <li><a href="login.php">Đăng nhập</a></li>
-            <li><a href="register.php">Đăng ký</a></li>
+            <li><a href="login.php">Đăng ký</a></li>
           <?php endif; ?>
         </ul>
       </li>
 
       <li>
-        <a href="cart.php" data-tooltip="Giỏ hàng"><i class="fa-solid fa-cart-shopping"></i></a>
+<!--        <a href="cart.php" data-tooltip="Giỏ hàng"><i class="fa-solid fa-cart-shopping"></i></a>-->
+        <!-- Trong header.php -->
+        <a href="cart.php" data-tooltip="Giỏ hàng" class="cart-icon position-relative">
+          <i class="fas fa-shopping-cart"></i>
+        </a>
       </li>
     </ul>
   </nav>
 
   <div id="dhHandle" class="dh__handle" title="Kéo để di chuyển">
     <a href="javascript:void(0)" id="toggleMenu"><i class="fa-solid fa-bars"></i></a>
+  </div>
+
+  <div class="dh__search-float">
+    <button class="search-btn-header">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
   </div>
 
 </header>

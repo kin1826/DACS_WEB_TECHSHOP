@@ -13,7 +13,7 @@ html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,'Segoe 
 main{padding:20px}
 
  /*Container để header có thể fixed mọi nơi */
-.dynamic-header{
+.dynamic-header {
   position: fixed;
   top: 12px; /* mặc định ở trên */
   left: 50%;
@@ -30,7 +30,7 @@ main{padding:20px}
 
   background: linear-gradient(135deg, rgba(14,165,164,0.12), rgba(255,255,255,0.02));
   color:var(--fg);
-  backdrop-filter: blur(6px) saturate(120%);
+  backdrop-filter: blur(15px) saturate(120%);
   border-radius: var(--radius-large);
   box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
   cursor: grab;
@@ -82,34 +82,36 @@ main{padding:20px}
   .dh__handle {display: flex; font-size: 20px; justify-content: center; align-items: center}
 }
 /*in menu*/
-.dh__menu {
+.dynamic-header .dh__menu {
   display: flex;
+  align-items: center;
+  justify-content: center;
   list-style: none;
   margin: 0;
   padding: 0;
   gap: 16px;
 }
 
-.dh__menu li a {
+.dynamic-header .dh__menu li a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
   border-radius: 10px;
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.03);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   font-size: 16px;
   color: #000000;
   text-decoration: none;
   transition: background 0.2s ease, transform 0.15s ease;
 }
 
-.dh__menu li a:hover {
+.dynamic-header .dh__menu li a:hover {
   background: rgba(255, 255, 255, 0);
   transform: translateY(-1px);
 }
 
-.dh__menu li a i {
+.dynamic-header .dh__menu li a i {
   font-size: 18px;
   display: inline-block;
 }
@@ -236,6 +238,12 @@ main{padding:20px}
   }
 }
 
+@media (max-width: 1450px) {
+  .dh__menu:not(.active) .hv_left_right {
+    display: none;
+  }
+}
+
 .user-dropdown {
   position: relative;
 }
@@ -243,11 +251,11 @@ main{padding:20px}
 /* menu con */
 .user-dropdown .user-menu {
   position: absolute;
+  width: 200px;
   top: 120%;
   right: 0;
-  background: rgba(255, 255, 255, 0.5);
   border-radius: 8px;
-  padding: 5px 0;
+  padding: 10px;
   list-style: none;
   min-width: 160px;
   opacity: 0;
@@ -256,26 +264,24 @@ main{padding:20px}
   transition: all 0.25s ease;
   z-index: 1000;
 
-  /* --- Hiệu ứng kính mờ (frosted glass) --- */
-  background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
-  backdrop-filter: blur(12px) saturate(160%);
   -webkit-backdrop-filter: blur(12px) saturate(160%);
 
   border: 1px solid rgba(255,255,255,0.25);
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.15);
+  background: linear-gradient(135deg, rgba(14, 165, 164, 0.07), rgba(255, 255, 255, 0.07));
+  color:var(--fg);
+  backdrop-filter: blur(15px) saturate(120%);
+  box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
 .dock-left .user-dropdown .user-menu {
   top: auto;
   bottom: 10px;
-  left: 40px;
+  left: 60px;
 }
 .dock-right .user-dropdown .user-menu {
   top: auto;
   bottom: 10px;
-  right: 40px;
+  right: 60px;
 }
 .dock-bottom .user-dropdown .user-menu {
   top: auto;
@@ -288,10 +294,11 @@ main{padding:20px}
   color: black;
   text-decoration: none;
   font-size: 14px;
+  z-index: 1;
+  overflow: hidden;
 }
-
-.user-dropdown .user-menu li a:hover {
-  background: #f2f2f2;
+.user-dropdown .user-menu li a i {
+  margin-right: 10px;
 }
 
 /* PC hover */
@@ -347,3 +354,64 @@ main{padding:20px}
 .fa-user:hover {
   color: #007bff;
 }
+
+/*search*/
+/* search follow header */
+.dh__search-float {
+  position: absolute;
+  right: -76px;          /* đẩy ra ngoài header */
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: auto; /* vẫn click được */
+}
+/* Dock bên trái */
+.dock-left .dh__search-float {
+  top: 103%;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+/* Dock bên phải (đối xứng với dock-left) */
+.dock-right .dh__search-float {
+  top: 103%;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+/* button */
+.dh__search-float .search-btn-header {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, rgba(14,165,164,0.12), rgba(255,255,255,0.02));
+  color:var(--fg);
+  backdrop-filter: blur(15px) saturate(120%);
+  box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
+  z-index:9999;
+  transition: width 220ms ease, height 220ms ease, transform 180ms ease, border-radius 180ms ease;
+}
+
+.dh__search-float .search-btn-header:hover {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+}
+
+.dh__search-float .search-btn-header i {
+  font-size: 15px;
+  color: #000; !important;
+  transition: color 0.5s ease;
+  z-index: 1000;
+}
+
+.dh__search-float .search-btn-header:hover i {
+  color: #fff;
+}
+
+

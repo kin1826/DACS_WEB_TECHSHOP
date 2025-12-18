@@ -1,4 +1,5 @@
 <?php
+session_start();
 ?>
 
 <!doctype html>
@@ -30,7 +31,7 @@
 
 </head>
 
-<?php include 'header.php'?>
+
 
 <body>
 
@@ -42,23 +43,19 @@
       <img class="img_back" src="img/blurred-image-shopping-mall-people-260nw-288520160.jpg" alt="">
       <div class="hero-content">
         <h1>Giới Thiệu Về TechStore</h1>
-        <p>Hơn 10 năm đồng hành cùng niềm đam mê công nghệ của người Việt</p>
+        <p>Hơn 2 năm đồng hành cùng niềm đam mê công nghệ của người Việt</p>
         <div class="hero-stats">
           <div class="stat-item">
-            <div class="stat-number" data-count="50000">0</div>
+            <div class="stat-number" data-count="52345">0</div>
             <div class="stat-label">Khách hàng</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number" data-count="100000">0</div>
+            <div class="stat-number" data-count="1120534">0</div>
             <div class="stat-label">Sản phẩm đã bán</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number" data-count="10">0</div>
+            <div class="stat-number" data-count="2">0</div>
             <div class="stat-label">Năm kinh nghiệm</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number" data-count="50">0</div>
-            <div class="stat-label">Nhân viên</div>
           </div>
         </div>
       </div>
@@ -74,8 +71,8 @@
       </div>
       <div class="story-content">
         <div class="story-text">
-          <p>TechStore được thành lập năm 2014 với sứ mệnh mang đến cho người dùng Việt Nam những sản phẩm công nghệ chính hãng với giá cả hợp lý nhất.</p>
-          <p>Từ một cửa hàng nhỏ tại Hà Nội, chúng tôi đã phát triển thành hệ thống phân phối với 5 showroom trên toàn quốc và trang thương mại điện tử phục vụ hàng triệu khách hàng.</p>
+          <p>TechStore được thành lập năm 2024 với sứ mệnh mang đến cho người dùng Việt Nam những sản phẩm công nghệ chính hãng với giá cả hợp lý nhất.</p>
+          <p>Từ một cửa hàng nhỏ tại Quảng Nam, chúng tôi đã luôn nỗi lực phát triển để phục vụ hàng triệu khách hàng một cách tốt nhất.</p>
           <div class="story-features">
             <div class="feature">
               <i class="fas fa-bullseye"></i>
@@ -109,38 +106,24 @@
       </div>
       <div class="timeline">
         <div class="timeline-item">
-          <div class="timeline-year">2014</div>
+          <div class="timeline-year">3/2024</div>
           <div class="timeline-content">
-            <h4>Thành lập TechStore</h4>
-            <p>Khởi đầu với cửa hàng đầu tiên tại 123 Trần Duy Hưng, Hà Nội</p>
+            <h4>Ý tưởng TechStore</h4>
+            <p>Khởi đầu ý tưởng đầu tiên của các thành viên</p>
           </div>
         </div>
         <div class="timeline-item">
-          <div class="timeline-year">2016</div>
+          <div class="timeline-year">12/2024</div>
           <div class="timeline-content">
-            <h4>Mở rộng hệ thống</h4>
-            <p>Khai trương 2 showroom tại TP.HCM và Đà Nẵng</p>
+            <h4>Học tập, làm quen để xây dựng TechStore</h4>
+            <p>Học tập về web và khởi nghiệp tại trường Đại học Công nghệ thông tin & Truyền thông Việt Hàn</p>
           </div>
         </div>
         <div class="timeline-item">
-          <div class="timeline-year">2018</div>
+          <div class="timeline-year">10/2025</div>
           <div class="timeline-content">
-            <h4>Ra mắt website</h4>
-            <p>Phát triển nền tảng thương mại điện tử TechStore.vn</p>
-          </div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-year">2020</div>
-          <div class="timeline-content">
-            <h4>Đối tác chính thức</h4>
-            <p>Trở thành đối tác phân phối chính thức của Apple, Samsung, Sony</p>
-          </div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-year">2024</div>
-          <div class="timeline-content">
-            <h4>Tiếp tục phát triển</h4>
-            <p>Mở rộng thêm 2 showroom và phát triển dịch vụ hậu mãi</p>
+            <h4>Bắt tay xây dựng website</h4>
+            <p>Bắt đầu phát triển nền tảng thương mại điện tử TechStore.vn</p>
           </div>
         </div>
       </div>
@@ -174,7 +157,7 @@
             <i class="fas fa-truck"></i>
           </div>
           <h4>Giao Hàng Nhanh</h4>
-          <p>Miễn phí giao hàng toàn quốc trong 24h với đơn hàng từ 2 triệu</p>
+          <p>Giao hàng toàn quốc trong 3 - 4 ngày.</p>
         </div>
         <div class="reason-card">
           <div class="reason-icon">
@@ -284,7 +267,7 @@
         </div>
         <div class="team-member">
           <div class="member-photo">
-            <img src="img/adminIMG/z7104405633196_5d38e69cb841b738b7bbb3af849dc4dc.jpg" alt="CSO">
+            <img src="img/adminIMG/588054205_2284270218745872_8088271008770992378_n.jpg" alt="CSO">
           </div>
           <h4>Trương Công Lực</h4>
           <p class="position">Sinh viên VKU - Chuyên ngành Công nghệ Phần mềm</p>
@@ -295,45 +278,46 @@
   </section>
 
   <!-- Warehouse & Locations -->
-  <section class="locations">
-    <div class="container">
-      <div class="section-header">
-        <h2>Hệ Thống Showroom & Kho Hàng</h2>
-        <p>Mạng lưới phục vụ rộng khắp toàn quốc</p>
-      </div>
-      <div class="locations-content">
-        <div class="locations-map">
-          <div class="map-placeholder">
-            <i class="fas fa-map-marked-alt"></i>
-            <p>Bản đồ hệ thống showroom TechStore</p>
-            <img src="https://images.unsplash.com/photo-1542744095-291d1f67b221?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Warehouse">
-          </div>
-        </div>
-        <div class="locations-list">
-          <div class="location-item">
-            <h4>🏢 Hà Nội - Trụ sở chính</h4>
-            <p>123 Trần Duy Hưng, Cầu Giấy</p>
-            <p>📞 024 1234 5678</p>
-            <p>🕘 8:00 - 22:00</p>
-          </div>
-          <div class="location-item">
-            <h4>🏬 TP.HCM - Chi nhánh</h4>
-            <p>456 Nguyễn Văn Linh, Quận 7</p>
-            <p>📞 028 8765 4321</p>
-            <p>🕘 8:00 - 22:00</p>
-          </div>
-          <div class="location-item">
-            <h4>🏪 Đà Nẵng - Chi nhánh</h4>
-            <p>789 Trần Phú, Hải Châu</p>
-            <p>📞 0236 1357 2468</p>
-            <p>🕘 8:00 - 21:00</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+<!--  <section class="locations">-->
+<!--    <div class="container">-->
+<!--      <div class="section-header">-->
+<!--        <h2>Hệ Thống Showroom & Kho Hàng</h2>-->
+<!--        <p>Mạng lưới phục vụ rộng khắp toàn quốc</p>-->
+<!--      </div>-->
+<!--      <div class="locations-content">-->
+<!--        <div class="locations-map">-->
+<!--          <div class="map-placeholder">-->
+<!--            <i class="fas fa-map-marked-alt"></i>-->
+<!--            <p>Bản đồ hệ thống showroom TechStore</p>-->
+<!--            <img src="https://images.unsplash.com/photo-1542744095-291d1f67b221?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Warehouse">-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        <div class="locations-list">-->
+<!--          <div class="location-item">-->
+<!--            <h4>🏢 Hà Nội - Trụ sở chính</h4>-->
+<!--            <p>123 Trần Duy Hưng, Cầu Giấy</p>-->
+<!--            <p>📞 024 1234 5678</p>-->
+<!--            <p>🕘 8:00 - 22:00</p>-->
+<!--          </div>-->
+<!--          <div class="location-item">-->
+<!--            <h4>🏬 TP.HCM - Chi nhánh</h4>-->
+<!--            <p>456 Nguyễn Văn Linh, Quận 7</p>-->
+<!--            <p>📞 028 8765 4321</p>-->
+<!--            <p>🕘 8:00 - 22:00</p>-->
+<!--          </div>-->
+<!--          <div class="location-item">-->
+<!--            <h4>🏪 Đà Nẵng - Chi nhánh</h4>-->
+<!--            <p>789 Trần Phú, Hải Châu</p>-->
+<!--            <p>📞 0236 1357 2468</p>-->
+<!--            <p>🕘 8:00 - 21:00</p>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </section>-->
 </div>
-
+<?php include 'header.php'?>
+<?php include 'cornerButton.php'?>
 <?php include 'footer.php'?>
 
 <script>

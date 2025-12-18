@@ -614,7 +614,7 @@
 
 .product-card img {
   width: 100%;
-  height: 120px;
+  height: 200px;
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 15px;
@@ -645,13 +645,14 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 16px;
   transition: all 0.3s;
 }
 
 .add-cart-btn {
   background: #6a11cb;
   color: white;
+  padding: 8px;
 }
 
 .add-cart-btn:hover {
@@ -873,4 +874,685 @@
   .modal-content {
     padding: 20px;
   }
+}
+
+/*địa chỉ*/
+/* ========== PHẦN ĐỊA CHỈ GIAO HÀNG ========== */
+
+.address-section {
+  margin-bottom: 20px;
+}
+
+.address-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: white;
+}
+
+.address-option:hover {
+  border-color: #4a90e2;
+  background-color: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+.address-option.selected {
+  border-color: #3B82F6;
+  background-color: #eff6ff;
+  border-width: 2px;
+}
+
+.address-option.selected:hover {
+  border-color: #2563eb;
+  background-color: #dbeafe;
+}
+
+.address-radio {
+  margin-right: 15px;
+  margin-top: 3px;
+}
+
+.address-radio input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3B82F6;
+}
+
+.address-details {
+  flex-grow: 1;
+}
+
+.address-details h4 {
+  margin-bottom: 5px;
+  color: #1e293b;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.address-details p {
+  margin-bottom: 3px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.address-details p:last-child {
+  margin-bottom: 0;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* Nút thêm địa chỉ và sử dụng vị trí */
+.add-address-btn, .location-btn {
+  background-color: white;
+  border: 2px solid #e2e8f0;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.add-address-btn:hover, .location-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.add-address-btn:active, .location-btn:active {
+  transform: translateY(1px);
+}
+
+.add-address-btn i, .location-btn i {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.add-address-btn {
+  background-color: #3B82F6;
+  border-color: #3B82F6;
+  color: white;
+}
+
+.add-address-btn:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+/* Form thêm địa chỉ */
+.address-form {
+  margin-top: 20px;
+  padding: 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background-color: white;
+  color: #1e293b;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #94a3b8;
+}
+
+/* Nút trong form */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background-color: #3B82F6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-primary:active {
+  background-color: #1d4ed8;
+  transform: translateY(1px);
+}
+
+.btn-secondary {
+  background-color: #64748b;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #475569;
+}
+
+.btn-secondary:active {
+  background-color: #334155;
+  transform: translateY(1px);
+}
+
+/* Loading, error, success messages */
+.location-loading {
+  display: none;
+  color: #3B82F6;
+  margin-top: 10px;
+  font-size: 14px;
+  padding: 8px 12px;
+  background-color: #eff6ff;
+  border-radius: 6px;
+  border-left: 3px solid #3B82F6;
+}
+
+.location-loading i {
+  margin-right: 8px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.location-error {
+  color: #ef4444;
+  margin-top: 10px;
+  font-size: 14px;
+  padding: 8px 12px;
+  background-color: #fef2f2;
+  border-radius: 6px;
+  border-left: 3px solid #ef4444;
+  display: none;
+}
+
+.location-success {
+  color: #10B981;
+  margin-top: 10px;
+  font-size: 14px;
+  padding: 8px 12px;
+  background-color: #f0fdf4;
+  border-radius: 6px;
+  border-left: 3px solid #10B981;
+  display: none;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .address-option {
+    padding: 12px;
+    flex-direction: column;
+  }
+
+  .address-radio {
+    margin-right: 0;
+    margin-bottom: 10px;
+    align-self: flex-start;
+  }
+
+  .add-address-btn, .location-btn {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+    justify-content: center;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+/* Hiệu ứng khi thay đổi địa chỉ */
+.address-option {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Style cho địa chỉ mặc định */
+.address-option.selected .address-details h4::after {
+  content: " (Mặc định)";
+  color: #3B82F6;
+  font-weight: normal;
+  font-size: 13px;
+}
+
+/* Hiệu ứng focus cho các input trong form */
+.form-group input:invalid {
+  border-color: #f87171;
+}
+
+.form-group input:valid {
+  border-color: #10B981;
+}
+
+/* Style cho số điện thoại */
+.address-details p:last-child::before {
+  content: "📱 ";
+  font-size: 12px;
+}
+
+/* Hiệu ứng khi chọn địa chỉ */
+.address-option {
+  position: relative;
+  overflow: hidden;
+}
+
+.address-option.selected::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: #3B82F6;
+  border-radius: 2px 0 0 2px;
+}
+
+/* Tooltip cho các nút */
+.add-address-btn, .location-btn {
+  position: relative;
+}
+
+.add-address-btn:hover::after,
+.location-btn:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e293b;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-bottom: 5px;
+  z-index: 100;
+}
+
+.add-address-btn:hover::after {
+  content: "Thêm địa chỉ mới";
+}
+
+.location-btn:hover::after {
+  content: "Lấy địa chỉ từ vị trí hiện tại";
+}
+
+/* CSS gộp cho nút xóa và set mặc định */
+.address-actions {
+  margin-left: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.set-default-btn, .delete-address-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border: 1px solid;
+}
+
+.set-default-btn {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0284c7;
+}
+
+.set-default-btn:hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.delete-address-btn {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.delete-address-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.delete-address-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+}
+
+.default-badge {
+  background: #10b981;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* Overlay */
+.modal_item {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Ẩn modal */
+.modal_item.hidden {
+  display: none;
+}
+
+/* Nội dung modal */
+.modal_item-content {
+  background: #fff;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  animation: fadeIn 0.25s ease;
+}
+
+/* Nút đóng */
+/*.close-btn {*/
+/*  position: absolute;*/
+/*  top: 12px;*/
+/*  right: 14px;*/
+/*  font-size: 24px;*/
+/*  cursor: pointer;*/
+/*  color: #000000;*/
+/*  border: black solid 1px;*/
+/*  border-radius: 8px;*/
+/*  padding: 4px;*/
+/*}*/
+
+/*.close-btn:hover {*/
+/*  color: #000;*/
+/*  border: black solid 1px;*/
+/*  transition: all 0.5ms ease-in-out;*/
+/*}*/
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 22px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  color: #333;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+
+  transition: all 0.2s ease;
+}
+
+/* Hover – desktop */
+.close-btn:hover {
+  background: #b0b0b0;
+  color: #000;
+  transform: rotate(360deg);
+}
+
+/* Active – click */
+.close-btn:active {
+  transform: scale(0.9);
+}
+
+/* Mobile – tăng hit area */
+@media (max-width: 768px) {
+  .close-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 24px;
+  }
+}
+
+
+/* Item trong chi tiết đơn */
+.detail-item {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.detail-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 1023px) {
+  .modal-content {
+    max-width: 700px;
+    padding: 20px;
+  }
+
+  .detail-item img {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    padding: 16px;
+  }
+
+  .close-btn {
+    top: 12px;
+    right: 14px;
+    font-size: 28px;
+  }
+
+  .detail-item {
+    align-items: flex-start;
+  }
+
+  .detail-item img {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content h3 {
+    font-size: 18px;
+  }
+
+  .modal-content p,
+  .modal-content div {
+    font-size: 14px;
+  }
+
+  .close-btn {
+    font-size: 26px;
+  }
+}
+
+/*đánh giá*/
+.review-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.review-modal.hidden {
+  display: none;
+}
+
+.review-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+.review-box {
+  position: relative;
+  background: #fff;
+  width: 500px;
+  max-height: 80vh;
+  margin: 5vh auto;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.review-header {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.review-products {
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.review-product {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.review-product img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.review-product-info {
+  flex: 1;
+}
+
+.stars i {
+  color: #ccc;
+  cursor: pointer;
+}
+
+.stars i.active {
+  color: #f5a623;
+}
+
+.review-footer {
+  padding: 16px;
+  border-top: 1px solid #eee;
+  text-align: right;
 }

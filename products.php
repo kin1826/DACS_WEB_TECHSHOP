@@ -1,4 +1,69 @@
 <?php
+session_start();
+
+require_once 'class/product.php';
+require_once 'class/product_image.php';
+require_once 'class/category.php';
+require_once 'class/brand.php';
+
+$productModel = new Product();
+$productImgModel = new ProductImage();
+$categoryModel = new Category();
+$brandModel = new Brand();
+
+$categoryList = $categoryModel->getHierarchical();
+$brandList = $brandModel->getAll(true);
+
+$productsArr = $productModel->getAll(true);
+
+$productsData = [];
+foreach ($productsArr as $product) {
+  // Lấy hình ảnh chính
+  $mainImage = $productImgModel->getMainImage($product['id']);
+  $imageUrl = $mainImage ? 'img/adminUP/products/' . $mainImage['image_url'] :
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
+
+  // Lấy danh mục
+  $category_if = $categoryModel->findById($product['category_id']);
+  $categoryName = !empty($category_if['name']) ? $category_if['name'] : 'Không có danh mục';
+
+  $brand_if = null;
+  $brandName = 'Không xác định';
+  if (!empty($product['brand_id'])) {
+    $brand_if = $brandModel->findById($product['brand_id']);
+    $brandName = !empty($brand_if['name']) ? $brand_if['name'] : $brandName;
+  }
+
+  // Giá: giữ cả numeric và formatted
+  $currentPriceNumeric = !empty($product['sale_price']) ? (float)$product['sale_price'] : (float)$product['regular_price'];
+  $originalPriceNumeric = (!empty($product['sale_price']) && $product['sale_price'] < $product['regular_price']) ?
+    (float)$product['regular_price'] : null;
+
+  $currentPriceFormatted = number_format($currentPriceNumeric, 0, ',', '.') . 'đ';
+  $originalPriceFormatted = $originalPriceNumeric ? number_format($originalPriceNumeric, 0, ',', '.') . 'đ' : null;
+
+  // Stock status (vẫn lưu để hiển thị tag nhưng không làm filter theo yêu cầu)
+  $stock_status = $product['stock_status'] ?? '';
+
+  $productsData[] = [
+    'id' => (int)$product['id'],
+    'name' => $product['name_pr'],
+    'category_id' => (int)$product['category_id'],
+    'category' => $categoryName,
+    'brand_id' => isset($product['brand_id']) ? (int)$product['brand_id'] : null,
+    'brand' => $brandName,
+    'current_price' => $currentPriceFormatted,
+    'current_price_numeric' => $currentPriceNumeric,
+    'original_price' => $originalPriceFormatted,
+    'original_price_numeric' => $originalPriceNumeric,
+    'image' => $imageUrl,
+    'slug' => $product['slug'] ?? '',
+    'stock_status' => $stock_status,
+    'created_at' => $product['created_at'] ?? null,
+    'num_buy' => isset($product['num_buy']) ? (int)$product['num_buy'] : 0,
+    'rating' => $product['rate'] ? (int)$product['rate'] : 0
+  ];
+}
 ?>
 
 <!doctype html>
@@ -29,8 +94,6 @@
   <meta name="theme-color" content="#fafafa">
 
 </head>
-
-<?php include 'header.php'?>
 
 <body>
 
@@ -63,60 +126,64 @@
           <div class="filter-group">
             <h4>Danh mục</h4>
             <div class="filter-options">
-              <label class="filter-option">
-                <input type="checkbox" name="category" value="laptop">
-                <span class="checkmark"></span>
-                Laptop & Máy tính
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="category" value="smartphone">
-                <span class="checkmark"></span>
-                Điện thoại
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="category" value="tablet">
-                <span class="checkmark"></span>
-                Máy tính bảng
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="category" value="audio">
-                <span class="checkmark"></span>
-                Tai nghe & Loa
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="category" value="accessory">
-                <span class="checkmark"></span>
-                Phụ kiện
-              </label>
+              <?php foreach ($categoryList as $parent): ?>
+                <div class="category-item">
+                  <label class="filter-option parent-option">
+                    <input type="checkbox" name="category[]" value="<?= $parent['id'] ?>">
+                    <span class="checkmark"></span>
+                    <?= htmlspecialchars($parent['name']) ?>
+                    <?php if (!empty($parent['children'])): ?>
+                      <i class="fas fa-chevron-down toggle-children"></i>
+                    <?php endif; ?>
+                  </label>
+
+                  <?php if (!empty($parent['children'])): ?>
+                    <div class="children" style="display:none; margin-left:18px;">
+                      <?php foreach ($parent['children'] as $child): ?>
+                        <label class="filter-option">
+                          <input type="checkbox" name="category[]" value="<?= $child['id'] ?>">
+                          <span class="checkmark"></span>
+                          <?= htmlspecialchars($child['name']) ?>
+                        </label>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
             </div>
           </div>
 
-          <!-- Giá -->
+           Giá
           <div class="filter-group">
             <h4>Mức giá</h4>
             <div class="filter-options">
               <label class="filter-option">
-                <input type="radio" name="price" value="0-5">
+                <input type="radio" name="price" value="all" checked>
+                <span class="checkmark"></span>
+                Tất cả
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="price" value="0-5000000">
                 <span class="checkmark"></span>
                 Dưới 5 triệu
               </label>
               <label class="filter-option">
-                <input type="radio" name="price" value="5-10">
+                <input type="radio" name="price" value="5000000-10000000">
                 <span class="checkmark"></span>
                 5 - 10 triệu
               </label>
               <label class="filter-option">
-                <input type="radio" name="price" value="10-20">
+                <input type="radio" name="price" value="10000000-20000000">
                 <span class="checkmark"></span>
                 10 - 20 triệu
               </label>
               <label class="filter-option">
-                <input type="radio" name="price" value="20-50">
+                <input type="radio" name="price" value="20000000-50000000">
                 <span class="checkmark"></span>
                 20 - 50 triệu
               </label>
               <label class="filter-option">
-                <input type="radio" name="price" value="50+">
+                <input type="radio" name="price" value="50000000+">
                 <span class="checkmark"></span>
                 Trên 50 triệu
               </label>
@@ -127,98 +194,18 @@
           <div class="filter-group">
             <h4>Thương hiệu</h4>
             <div class="filter-options">
-              <label class="filter-option">
-                <input type="checkbox" name="brand" value="apple">
-                <span class="checkmark"></span>
-                Apple
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="brand" value="samsung">
-                <span class="checkmark"></span>
-                Samsung
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="brand" value="sony">
-                <span class="checkmark"></span>
-                Sony
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="brand" value="asus">
-                <span class="checkmark"></span>
-                ASUS
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="brand" value="dell">
-                <span class="checkmark"></span>
-                Dell
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="brand" value="lenovo">
-                <span class="checkmark"></span>
-                Lenovo
-              </label>
-            </div>
-          </div>
-
-          <!-- Đánh giá -->
-          <div class="filter-group">
-            <h4>Đánh giá</h4>
-            <div class="filter-options">
-              <label class="filter-option rating-option">
-                <input type="radio" name="rating" value="5">
-                <span class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </span>
-                <span class="rating-text">5 sao</span>
-              </label>
-              <label class="filter-option rating-option">
-                <input type="radio" name="rating" value="4">
-                <span class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="far fa-star"></i>
-                            </span>
-                <span class="rating-text">4 sao trở lên</span>
-              </label>
-              <label class="filter-option rating-option">
-                <input type="radio" name="rating" value="3">
-                <span class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="far fa-star"></i>
-                                <i class="far fa-star"></i>
-                            </span>
-                <span class="rating-text">3 sao trở lên</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Tình trạng -->
-          <div class="filter-group">
-            <h4>Tình trạng</h4>
-            <div class="filter-options">
-              <label class="filter-option">
-                <input type="checkbox" name="status" value="in-stock">
-                <span class="checkmark"></span>
-                Còn hàng
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="status" value="pre-order">
-                <span class="checkmark"></span>
-                Đặt trước
-              </label>
-              <label class="filter-option">
-                <input type="checkbox" name="status" value="sale">
-                <span class="checkmark"></span>
-                Đang giảm giá
-              </label>
+<!--              <label class="filter-option">-->
+<!--                <input type="checkbox" name="brand[]" value="all" checked>-->
+<!--                <span class="checkmark"></span>-->
+<!--                Tất cả-->
+<!--              </label>-->
+              <?php foreach ($brandList as $brand): ?>
+                <label class="filter-option">
+                  <input type="checkbox" name="brand[]" value="<?= $brand['id'] ?>">
+                  <span class="checkmark"></span>
+                  <?= htmlspecialchars($brand['name']) ?>
+                </label>
+              <?php endforeach; ?>
             </div>
           </div>
         </div>
@@ -242,10 +229,25 @@
                 <i class="fas fa-list"></i>
               </button>
             </div>
-            <div class="results-count">
-              Hiển thị <span id="resultsCount">24</span> sản phẩm
-            </div>
+<!--            <div class="results-count">-->
+<!--              Hiển thị <span id="">--><?php //echo count($productsData)?><!--</span> sản phẩm-->
+<!--            </div>-->
           </div>
+
+<!--          <div class="toolbar-center">-->
+<!--            <div class="search-box">-->
+<!--              <i class="fas fa-search search-icon"></i>-->
+<!--              <input-->
+<!--                type="text"-->
+<!--                class="search-product"-->
+<!--                id="searchProduct"-->
+<!--                placeholder="Tìm kiếm sản phẩm..."-->
+<!--              >-->
+<!--              <button class="clear-search" id="clearSearch">-->
+<!--                <i class="fas fa-times"></i>-->
+<!--              </button>-->
+<!--            </div>-->
+<!--          </div>-->
 
           <div class="toolbar-right">
             <div class="sort-by">
@@ -265,19 +267,14 @@
         <!-- Products Grid -->
         <div class="products-grid" id="productsGrid">
           <!-- Sản phẩm sẽ được thêm bằng JavaScript -->
+
         </div>
 
         <!-- Pagination -->
         <div class="pagination">
-          <button class="page-btn prev" disabled>
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <button class="page-btn active">1</button>
-          <button class="page-btn">2</button>
-          <button class="page-btn">3</button>
-          <button class="page-btn">4</button>
-          <button class="page-btn next">
-            <i class="fas fa-chevron-right"></i>
+          <button class="see-more-btn" id="seeMoreBtn">
+            <i class="fa-solid fa-arrow-down"></i>
+            Xem thêm
           </button>
         </div>
 
@@ -310,406 +307,351 @@
   <i class="fas fa-filter"></i>
   <span>Bộ lọc</span>
 </button>
-
+<?php include 'header.php'?>
+<?php include 'cornerButton.php'?>
 <?php include 'footer.php'?>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Dữ liệu sản phẩm mẫu
-    const products = [
-      {
-        id: 1,
-        name: "iPhone 15 Pro Max 256GB",
-        category: "smartphone",
-        brand: "apple",
-        price: 32990000,
-        originalPrice: 35990000,
-        image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-        rating: 4.8,
-        reviews: 124,
-        description: "iPhone 15 Pro Max với chip A17 Pro, camera 48MP và thiết kế titan cao cấp.",
-        tags: ["new"],
-        inStock: true,
-        isSale: true
-      },
-      {
-        id: 2,
-        name: "MacBook Air M2 2023",
-        category: "laptop",
-        brand: "apple",
-        price: 28990000,
-        originalPrice: 30990000,
-        image: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-        rating: 4.9,
-        reviews: 89,
-        description: "MacBook Air siêu mỏng nhẹ với chip M2, màn hình Liquid Retina 13.6 inch.",
-        tags: ["new", "sale"],
-        inStock: true,
-        isSale: true
-      },
-      {
-        id: 3,
-        name: "Samsung Galaxy S24 Ultra",
-        category: "smartphone",
-        brand: "samsung",
-        price: 24990000,
-        originalPrice: 27990000,
-        image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-        rating: 4.7,
-        reviews: 156,
-        description: "Galaxy S24 Ultra với bút S-Pen, camera 200MP và chip Snapdragon 8 Gen 3.",
-        tags: ["new"],
-        inStock: true,
-        isSale: false
-      },
-      {
-        id: 4,
-        name: "Sony WH-1000XM5",
-        category: "audio",
-        brand: "sony",
-        price: 7990000,
-        originalPrice: 8990000,
-        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-        rating: 4.8,
-        reviews: 203,
-        description: "Tai nghe chống ồn tốt nhất thế giới với công nghệ AI Noise Canceling.",
-        tags: ["sale"],
-        inStock: true,
-        isSale: true
-      },
-      {
-        id: 5,
-        name: "iPad Pro 12.9 M2",
-        category: "tablet",
-        brand: "apple",
-        price: 27990000,
-        originalPrice: 29990000,
-        image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-        rating: 4.9,
-        reviews: 67,
-        description: "iPad Pro mạnh mẽ với chip M2, màn hình Liquid Retina XDR 12.9 inch.",
-        tags: ["limited"],
-        inStock: false,
-        isSale: false
-      },
-      {
-        id: 6,
-        name: "ASUS ROG Strix G16",
-        category: "laptop",
-        brand: "asus",
-        price: 35990000,
-        originalPrice: 38990000,
-        image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-        rating: 4.6,
-        reviews: 45,
-        description: "Laptop gaming cao cấp với RTX 4060, Intel Core i9 và màn hình 240Hz.",
-        tags: ["new", "sale"],
-        inStock: true,
-        isSale: true
-      },
-      {
-        id: 7,
-        name: "Dell XPS 13 Plus",
-        category: "laptop",
-        brand: "dell",
-        price: 31990000,
-        originalPrice: 33990000,
-        image: "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-        rating: 4.7,
-        reviews: 78,
-        description: "XPS 13 Plus thiết kế không viền, Intel Core i7 và bàn phím cảm ứng.",
-        tags: ["new"],
-        inStock: true,
-        isSale: false
-      },
-      {
-        id: 8,
-        name: "Samsung Galaxy Tab S9",
-        category: "tablet",
-        brand: "samsung",
-        price: 18990000,
-        originalPrice: 20990000,
-        image: "https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-        rating: 4.5,
-        reviews: 92,
-        description: "Tablet Android mạnh mẽ với S-Pen, màn hình 120Hz và chip Snapdragon 8 Gen 2.",
-        tags: ["sale"],
-        inStock: true,
-        isSale: true
-      }
-    ];
+  /*
+    Client-side filtering & sorting:
+    - allProducts: mảng sản phẩm (từ server, JSON-encoded)
+    - renderProducts(): render vào #productsGrid
+    - applyFilters(): filter + sort + paginate
+  */
 
-    // Hiển thị sản phẩm
-    function displayProducts(productsToShow) {
-      const productsGrid = document.getElementById('productsGrid');
-      productsGrid.innerHTML = '';
+  // Lấy dữ liệu sản phẩm từ PHP (an toàn vì dữ liệu đã load 1 lần)
+  const allProducts = <?php echo json_encode($productsData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
 
-      productsToShow.forEach(product => {
-        const productCard = createProductCard(product);
-        productsGrid.appendChild(productCard);
-      });
+  let state = {
+    filtered: [...allProducts],
+    sortBy: 'default',
+    page: 1,
+    perPage: 12,
+    visibleCount: 12
+  };
 
-      // Cập nhật số lượng kết quả
-      document.getElementById('resultsCount').textContent = productsToShow.length;
+  document.getElementById('seeMoreBtn').addEventListener('click', () => {
+    state.visibleCount += state.perPage;
+    applyFilters(); // ⚠️ gọi lại applyFilters, KHÔNG gọi renderProducts
+  });
+
+  function updateSeeMoreBtn() {
+    const btn = document.getElementById('seeMoreBtn');
+
+    if (state.visibleCount >= state.filtered.length) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = 'block';
     }
+  }
 
-    // Tạo card sản phẩm
-    function createProductCard(product) {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.innerHTML = `
-            <div class="product-tags">
-                ${product.tags.map(tag => `
-                    <span class="product-tag tag-${tag}">${tag === 'new' ? 'Mới' : tag === 'sale' ? 'Sale' : 'Giới hạn'}</span>
-                `).join('')}
-            </div>
-            <div class="product-actions">
-                <button class="action-btn wishlist-btn" data-id="${product.id}">
-                    <i class="far fa-heart"></i>
-                </button>
-                <button class="action-btn compare-btn" data-id="${product.id}">
-                    <i class="fas fa-chart-bar"></i>
-                </button>
-            </div>
-            <div class="product-img">
-                <img src="${product.image}" alt="${product.name}">
-            </div>
-            <div class="product-info">
-                <div class="product-category">${getCategoryName(product.category)}</div>
-                <h3 class="product-name">${product.name}</h3>
-                <p class="product-description">${product.description}</p>
-                <div class="product-price">
-                    <span class="current-price">${formatPrice(product.price)}</span>
-                    ${product.originalPrice > product.price ?
-        `<span class="original-price">${formatPrice(product.originalPrice)}</span>` : ''
-      }
-                </div>
-                <div class="product-rating">
-                    <div class="stars">
-                        ${generateStars(product.rating)}
-                    </div>
-                    <span class="rating-count">(${product.reviews})</span>
-                </div>
-                <button class="add-to-cart" data-id="${product.id}">
-                    <i class="fas fa-shopping-cart"></i>
-                    Thêm vào giỏ
-                </button>
-                <a href="product_detail.php" class="quick-view-btn"">
-                    <i class="fas fa-eye"></i>
-                    Xem thêm
-                </a>
-            </div>
-        `;
-      return card;
+
+  // Helpers
+  function formatCurrency(num) {
+    // num is numeric
+    return new Intl.NumberFormat('vi-VN').format(num) + 'đ';
+  }
+
+  function renderProductCard(p) {
+    // create product card HTML (escape where needed)
+    const origPriceHTML = p.original_price ? `<span class="original-price">${p.original_price}</span>` : '';
+    return `
+  <div class="product-card" data-id="${p.id}" data-price="${p.current_price_numeric}">
+    <div class="product-tags">
+      <p class="product-tag tag-${p.stock_status}">${p.stock_status}</p>
+    </div>
+    <div class="product-actions">
+      <button class="action-btn wishlist-btn" data-id="${p.id}"><i class="far fa-heart"></i></button>
+      <button class="action-btn compare-btn" data-id="${p.id}"><i class="fas fa-chart-bar"></i></button>
+    </div>
+    <div class="product-img">
+      <img src="${p.image}" alt="${(p.name || '').replace(/"/g, '&quot;')}">
+    </div>
+    <div class="product-info">
+      <div class="product-category">${(p.category || '')} - ${p.brand}</div>
+      <h3 class="product-name">${(p.name || '')}</h3>
+      <div class="product-price">
+        <span class="current-price">${p.current_price}</span>
+        ${origPriceHTML}
+      </div>
+      <div class="product-rating">
+        <div class="stars" id="productRating">${renderStars(p.rating)}</div>
+        <span class="rating-count">(${p.num_buy})</span>
+      </div>
+
+      <a href="product_detail.php?id=${p.id}" class="add-to-cart">
+        <i class="fas fa-eye"></i> Xem thêm
+      </a>
+    </div>
+  </div>
+  `;
+  }
+
+  function renderProducts(products) {
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
+    if (!products.length) {
+      grid.innerHTML = '<p>Không có sản phẩm phù hợp.</p>';
+      return;
     }
+    grid.innerHTML = products.map(renderProductCard).join('');
+  }
 
-    // Hàm hỗ trợ
-    function getCategoryName(category) {
-      const categories = {
-        'laptop': 'Laptop & Máy tính',
-        'smartphone': 'Điện thoại',
-        'tablet': 'Máy tính bảng',
-        'audio': 'Tai nghe & Loa',
-        'accessory': 'Phụ kiện'
-      };
-      return categories[category] || category;
+  // Pagination render
+  function renderPagination(total, page, perPage) {
+    const pagination = document.getElementById('pagination');
+    if (!pagination) return;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    let html = '';
+
+    html += `<button class="page-btn prev" ${page<=1 ? 'disabled' : ''} data-page="${page-1}"><i class="fas fa-chevron-left"></i></button>`;
+    // show up to 5 pages with current in middle
+    const range = 2;
+    const start = Math.max(1, page - range);
+    const end = Math.min(totalPages, page + range);
+    for (let i = start; i <= end; i++) {
+      html += `<button class="page-btn ${i===page ? 'active' : ''}" data-page="${i}">${i}</button>`;
     }
+    html += `<button class="page-btn next" ${page>=totalPages ? 'disabled' : ''} data-page="${page+1}"><i class="fas fa-chevron-right"></i></button>`;
 
-    function formatPrice(price) {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-      }).format(price);
-    }
+    pagination.innerHTML = html;
 
-    function generateStars(rating) {
-      let stars = '';
-      const fullStars = Math.floor(rating);
-      const halfStar = rating % 1 >= 0.5;
-
-      for (let i = 0; i < fullStars; i++) {
-        stars += '<i class="fas fa-star"></i>';
-      }
-
-      if (halfStar) {
-        stars += '<i class="fas fa-star-half-alt"></i>';
-      }
-
-      const emptyStars = 5 - Math.ceil(rating);
-      for (let i = 0; i < emptyStars; i++) {
-        stars += '<i class="far fa-star"></i>';
-      }
-
-      return stars;
-    }
-
-    // View mode toggle
-    const viewBtns = document.querySelectorAll('.view-btn');
-    const productsGrid = document.getElementById('productsGrid');
-
-    viewBtns.forEach(btn => {
-      btn.addEventListener('click', function() {
-        viewBtns.forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-
-        const viewMode = this.dataset.view;
-        const productCards = document.querySelectorAll('.product-card');
-
-        productCards.forEach(card => {
-          card.classList.toggle('list-view', viewMode === 'list');
-        });
-
-        productsGrid.classList.toggle('list-view', viewMode === 'list');
-      });
-    });
-
-    // Quick view modal
-    const quickViewModal = document.getElementById('quickViewModal');
-    const quickViewContent = document.getElementById('quickViewContent');
-    const closeQuickView = document.getElementById('closeQuickView');
-
-    document.addEventListener('click', function(e) {
-      if (e.target.classList.contains('quick-view-btn')) {
-        const productId = parseInt(e.target.dataset.id);
-        const product = products.find(p => p.id === productId);
-        showQuickView(product);
-      }
-    });
-
-    function showQuickView(product) {
-      quickViewContent.innerHTML = `
-            <div class="quick-view-grid">
-                <div class="quick-view-image">
-                    <img src="${product.image}" alt="${product.name}">
-                </div>
-                <div class="quick-view-info">
-                    <div class="product-tags">
-                        ${product.tags.map(tag => `
-                            <span class="product-tag tag-${tag}">${tag === 'new' ? 'Mới' : tag === 'sale' ? 'Sale' : 'Giới hạn'}</span>
-                        `).join('')}
-                    </div>
-                    <h2>${product.name}</h2>
-                    <div class="product-rating large">
-                        <div class="stars">
-                            ${generateStars(product.rating)}
-                        </div>
-                        <span class="rating-count">${product.reviews} đánh giá</span>
-                    </div>
-                    <div class="product-price large">
-                        <span class="current-price">${formatPrice(product.price)}</span>
-                        ${product.originalPrice > product.price ?
-        `<span class="original-price">${formatPrice(product.originalPrice)}</span>` : ''
-      }
-                    </div>
-                    <p class="product-description">${product.description}</p>
-                    <div class="quick-view-actions">
-                        <button class="add-to-cart large" data-id="${product.id}">
-                            <i class="fas fa-shopping-cart"></i>
-                            Thêm vào giỏ hàng
-                        </button>
-                        <button class="wishlist-btn large" data-id="${product.id}">
-                            <i class="far fa-heart"></i>
-                            Yêu thích
-                        </button>
-                    </div>
-                    <div class="product-specs">
-                        <h4>Thông số kỹ thuật</h4>
-                        <ul>
-                            <li><strong>Thương hiệu:</strong> ${product.brand.toUpperCase()}</li>
-                            <li><strong>Danh mục:</strong> ${getCategoryName(product.category)}</li>
-                            <li><strong>Tình trạng:</strong> ${product.inStock ? 'Còn hàng' : 'Hết hàng'}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        `;
-      quickViewModal.classList.add('show');
-    }
-
-    closeQuickView.addEventListener('click', function() {
-      quickViewModal.classList.remove('show');
-    });
-
-    quickViewModal.addEventListener('click', function(e) {
-      if (e.target === quickViewModal) {
-        quickViewModal.classList.remove('show');
-      }
-    });
-
-    // Floating filter button
-    const floatingFilterBtn = document.getElementById('floatingFilterBtn');
-    const filterSidebar = document.querySelector('.filter-sidebar');
-    //
-    // floatingFilterBtn.addEventListener('click', function() {
-    //   filterSidebar.style.display = filterSidebar.style.display === 'block' ? 'none' : 'block';
-    // });
-
-    floatingFilterBtn.addEventListener('click', function() {
-      filterSidebar.classList.toggle('show');
-    });
-
-// Đóng filter khi click bên ngoài trên mobile
-    document.addEventListener('click', function(e) {
-      if (window.innerWidth <= 768) {
-        if (!filterSidebar.contains(e.target) && !floatingFilterBtn.contains(e.target)) {
-          filterSidebar.classList.remove('show');
+    // bind events
+    pagination.querySelectorAll('button.page-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const next = parseInt(btn.getAttribute('data-page'));
+        if (!isNaN(next)) {
+          state.page = next;
+          applyFilters();
+          window.scrollTo({top: 200, behavior: 'smooth'});
         }
-      }
-    });
-
-    // Clear filters
-    document.getElementById('clearFilters').addEventListener('click', function() {
-      const inputs = document.querySelectorAll('.filter-sidebar input');
-      inputs.forEach(input => {
-        input.checked = false;
       });
     });
+  }
 
-    // Apply filters
-    document.getElementById('applyFilters').addEventListener('click', function() {
-      // Logic lọc sản phẩm sẽ được thêm ở đây
-      displayProducts(products); // Tạm thời hiển thị tất cả
-    });
+  function renderStars(rating) {
+    rating = Math.max(0, Math.min(5, rating));
 
-    // Sort products
-    document.getElementById('sortBy').addEventListener('change', function(e) {
-      const sortValue = e.target.value;
-      let sortedProducts = [...products];
+    let html = '';
 
-      switch(sortValue) {
-        case 'price-asc':
-          sortedProducts.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-desc':
-          sortedProducts.sort((a, b) => b.price - a.price);
-          break;
-        case 'newest':
-          // Giả sử sản phẩm mới hơn có ID lớn hơn
-          sortedProducts.sort((a, b) => b.id - a.id);
-          break;
-        case 'popular':
-          sortedProducts.sort((a, b) => b.reviews - a.reviews);
-          break;
-        case 'rating':
-          sortedProducts.sort((a, b) => b.rating - a.rating);
-          break;
+    for (let i = 1; i <= 5; i++) {
+      if (rating >= i) {
+        html += '<i class="fa-solid fa-star"></i>';
+      } else if (rating >= i - 0.5) {
+        html += '<i class="fa-solid fa-star-half-stroke"></i>';
+      } else {
+        html += '<i class="fa-regular fa-star"></i>';
+      }
+    }
+
+    return html;
+  }
+
+
+  // Read filters from UI
+  function getSelectedCategories() {
+    return Array.from(document.querySelectorAll('input[name="category[]"]:checked')).map(i => parseInt(i.value));
+  }
+  function getSelectedBrands() {
+    // treat 'all' specially
+    const checked = Array.from(document.querySelectorAll('input[name="brand[]"]:checked')).map(i => i.value);
+    if (checked.includes('all')) return []; // empty -> means all brands
+    return checked.map(v => parseInt(v));
+  }
+  function getSelectedPriceRange() {
+    const v = document.querySelector('input[name="price"]:checked').value;
+    if (v === 'all') return null;
+    if (v.endsWith('+')) {
+      const min = parseInt(v.replace('+',''));
+      return {min, max: Infinity};
+    }
+    const parts = v.split('-');
+    return {min: parseInt(parts[0]), max: parseInt(parts[1])};
+  }
+
+  // Apply filters + sort + paginate
+  function applyFilters() {
+    const cats = getSelectedCategories().filter(n => !isNaN(n));
+    const brands = getSelectedBrands().filter(n => !isNaN(n));
+    const priceRange = getSelectedPriceRange();
+    const sortBy = document.getElementById('sortBy').value;
+    state.sortBy = sortBy;
+
+    let filtered = allProducts.filter(p => {
+      // category: if none selected -> pass all
+      if (cats.length) {
+        if (!cats.includes(p.category_id)) return false;
       }
 
-      displayProducts(sortedProducts);
+      // brand
+      if (brands.length) {
+        if (!brands.includes(p.brand_id)) return false;
+      }
+
+      // price
+      if (priceRange) {
+        const price = parseFloat(p.current_price_numeric);
+        if (isNaN(price)) return false;
+        if (price < priceRange.min) return false;
+        if (priceRange.max !== Infinity && price > priceRange.max) return false;
+      }
+      return true;
     });
 
-    // Hiển thị sản phẩm ban đầu
-    displayProducts(products);
+    // Sort
+    if (sortBy === 'price-asc') {
+      filtered.sort((a,b)=> a.current_price_numeric - b.current_price_numeric);
+    } else if (sortBy === 'price-desc') {
+      filtered.sort((a,b)=> b.current_price_numeric - a.current_price_numeric);
+    } else if (sortBy === 'newest') {
+      filtered.sort((a,b)=> {
+        const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const db = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return db - da;
+      });
+    } else if (sortBy === 'popular') {
+      filtered.sort((a,b)=> b.num_buy - a.num_buy);
+    }
 
-    // Hiển thị sản phẩm liên quan
-    const relatedProducts = document.getElementById('relatedProducts');
-    const related = products.slice(0, 4); // Lấy 4 sản phẩm đầu làm liên quan
+    state.filtered = filtered;
 
-    related.forEach(product => {
-      const relatedCard = createProductCard(product);
-      relatedCard.classList.add('related-card');
-      relatedProducts.appendChild(relatedCard);
+    // Pagination
+    // const total = filtered.length;
+    // const perPage = state.perPage;
+    // const page = Math.min(state.page, Math.max(1, Math.ceil(total / perPage)));
+    // state.page = page;
+    // const start = (page - 1) * perPage;
+    // const pageItems = filtered.slice(start, start + perPage);
+    //
+    // renderProducts(pageItems);
+    // document.querySelector('.results-count span').textContent = total;
+    // // renderPagination(total, page, perPage);
+
+    const total = filtered.length;
+
+// luôn đảm bảo visibleCount không vượt total
+    state.visibleCount = Math.min(state.visibleCount, total);
+
+// lấy từ đầu tới visibleCount
+    const visibleItems = filtered.slice(0, state.visibleCount);
+
+    renderProducts(visibleItems);
+    updateSeeMoreBtn();
+  }
+
+  // Clear filters
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    // uncheck all category and brand except 'all' for brand and price
+    document.querySelectorAll('input[name="category[]"]').forEach(i => i.checked = false);
+    document.querySelectorAll('input[name="brand[]"]').forEach(i => i.checked = i.value === 'all');
+    document.querySelector('input[name="price"][value="all"]').checked = true;
+    document.getElementById('sortBy').value = 'default';
+    state.page = 1;
+    state.visibleCount = state.perPage;
+
+    applyFilters();
+  });
+
+  // Apply button
+  document.getElementById('applyFilters').addEventListener('click', () => {
+    state.page = 1;
+    state.visibleCount = state.perPage;
+
+    applyFilters();
+  });
+
+  // Sort change immediate
+  document.getElementById('sortBy').addEventListener('change', () => {
+    state.page = 1;
+    state.visibleCount = state.perPage;
+
+    applyFilters();
+  });
+
+  // Toggle children for category
+  document.querySelectorAll(".toggle-children").forEach(btn => {
+    btn.addEventListener("click", function () {
+      const children = this.parentElement.nextElementSibling;
+      if (children.style.display === "none") {
+        children.style.display = "block";
+        this.classList.add("open");
+      } else {
+        children.style.display = "none";
+        this.classList.remove("open");
+      }
     });
+  });
+
+  // View mode buttons (grid/list)
+  document.querySelectorAll('.view-btn').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+      el.classList.add('active');
+      const view = el.getAttribute('data-view');
+      const grid = document.getElementById('productsGrid');
+      if (view === 'list') grid.classList.add('list-view'); else grid.classList.remove('list-view');
+    });
+  });
+
+  // Init
+  document.addEventListener('DOMContentLoaded', ()=> {
+    // default: render first page of allProducts
+    state.filtered = [...allProducts];
+    applyFilters();
+  });
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const categoryId = params.get('category');
+
+    if (!categoryId) return;
+
+    // Tìm checkbox category tương ứng
+    const checkbox = document.querySelector(
+      `input[name="category[]"][value="${categoryId}"]`
+    );
+
+    if (checkbox) {
+      checkbox.checked = true;
+
+      // Nếu là category con → mở category cha
+      const childrenBox = checkbox.closest('.children');
+      if (childrenBox) {
+        childrenBox.style.display = 'block';
+      }
+
+      // Nếu có filter AJAX → trigger change
+      checkbox.dispatchEvent(new Event('change'));
+    }
+  });
+
+  document.querySelectorAll('input[name="category[]"]').forEach(cb => {
+    cb.addEventListener('change', applyFilters);
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const brandId = params.get('brand');
+
+    if (!brandId) return;
+
+    // Tìm checkbox category tương ứng
+    const checkbox = document.querySelector(
+      `input[name="brand[]"][value="${brandId}"]`
+    );
+
+    if (checkbox) {
+      checkbox.checked = true;
+
+      // Nếu có filter AJAX → trigger change
+      checkbox.dispatchEvent(new Event('change'));
+    }
+  });
+
+  document.querySelectorAll('input[name="brand[]"]').forEach(cb => {
+    cb.addEventListener('change', applyFilters);
   });
 </script>
 

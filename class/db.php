@@ -6,30 +6,34 @@ $config['DB_PASS'] = '1234';
 $config['DB_NAME'] = 'techstore_db';
 
 class DB {
-  private $link;
-  private $error;
+  protected static $conn = null;  // connection dùng chung
+  protected $link;                 // thuộc tính object dùng để query
+  protected $error;
 
   function __construct() {
-      global $config;
-      try {
-        $this->link = mysqli_connect(
+    global $config;
+    try {
+      if (!self::$conn) { // nếu chưa có connection
+        self::$conn = mysqli_connect(
           $config['DB_HOST'],
           $config['DB_USER'],
           $config['DB_PASS'],
           $config['DB_NAME']
         );
 
-        if (!$this->link) {
+        if (!self::$conn) {
           throw new Exception("Can't connect to database: " . mysqli_connect_error());
         }
 
-        mysqli_query($this->link, "set names 'utf8'");
-        mysqli_set_charset($this->link, 'utf8');
-
-      } catch (Exception $e) {
-        $this->error = $e->getMessage();
-        die($this->error);
+        mysqli_set_charset(self::$conn, 'utf8');
       }
+
+      $this->link = self::$conn; // gán connection dùng chung cho object
+
+    } catch (Exception $e) {
+      $this->error = $e->getMessage();
+      die($this->error);
+    }
   }
 
 
@@ -119,11 +123,11 @@ class DB {
   /**
    * Close connection
    */
-  public function __destruct() {
-    if ($this->link) {
-      mysqli_close($this->link);
-    }
-  }
+//  public function __destruct() {
+//    if ($this->link) {
+//      mysqli_close($this->link);
+//    }
+//  }
 
   /**
    * Simple SELECT query helper

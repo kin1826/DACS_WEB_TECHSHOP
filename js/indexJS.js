@@ -11,14 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Tạo sản phẩm ảo
   const newProductsTrack = document.getElementById('newProductsTrack');
   const products = [
-    { name: 'Áo Thun Basic', category: 'Thời trang nam', price: '299.000đ', oldPrice: '399.000đ', rating: 4.5, reviews: 128, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-    { name: 'Quần Jeans Slim', category: 'Thời trang nam', price: '599.000đ', oldPrice: '799.000đ', rating: 4.8, reviews: 89, image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-    { name: 'Áo Khoác Denim', category: 'Thời trang nữ', price: '899.000đ', oldPrice: '1.199.000đ', rating: 4.7, reviews: 64, image: 'https://images.unsplash.com/photo-1539109136883-68d8767cfc77?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-    { name: 'Váy Liền Thun', category: 'Thời trang nữ', price: '459.000đ', oldPrice: '599.000đ', rating: 4.6, reviews: 142, image: 'https://images.unsplash.com/photo-1595777457583-95b7f323d972?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-    { name: 'Giày Sneaker', category: 'Giày dép', price: '1.299.000đ', oldPrice: '1.599.000đ', rating: 4.9, reviews: 203, image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-    { name: 'Túi Đeo Chéo', category: 'Phụ kiện', price: '359.000đ', oldPrice: '499.000đ', rating: 4.4, reviews: 76, image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-    { name: 'Áo Len Cardigan', category: 'Thời trang nữ', price: '689.000đ', oldPrice: '899.000đ', rating: 4.7, reviews: 53, image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-    { name: 'Quần Short Kaki', category: 'Thời trang nam', price: '329.000đ', oldPrice: '429.000đ', rating: 4.3, reviews: 97, image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' }
+
   ];
 
   // Tạo HTML cho sản phẩm

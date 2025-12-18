@@ -4,6 +4,10 @@
   margin: 0 auto;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 .cart-page {
   min-height: 100vh;
   background: #f8f9fa;
@@ -244,6 +248,9 @@
   padding: 30px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
   margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  width: auto;
 }
 
 .summary-card h3 {
@@ -388,6 +395,7 @@
   justify-content: center;
   gap: 10px;
   margin-bottom: 20px;
+  text-decoration: none;
 }
 
 .checkout-btn:hover {

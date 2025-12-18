@@ -1,0 +1,357 @@
+/* ========== CORNER BUTTON STYLES ========== */
+.corner-container {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 9999;
+}
+
+/* Nút chính */
+.corner-main-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.corner-main-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 25px rgba(106, 17, 203, 0.4);
+}
+
+.corner-main-btn.active {
+  transform: rotate(180deg);
+}
+
+/* Menu chức năng */
+.corner-menu {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9998;
+}
+
+.corner-menu-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.corner-menu-btn:hover {
+  transform: scale(1.1);
+  background: #667eea;
+  color: white;
+}
+
+.search-btn:hover {
+  background: #10b981;
+}
+
+.chat-btn:hover {
+  background: #3b82f6;
+}
+
+/* Popup chung */
+.search-popup, .chat-popup {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 350px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 10001;
+  overflow: hidden;
+}
+
+/* Header popup */
+.search-header, .chat-header {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-header h3, .chat-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  opacity: 0.8;
+}
+
+/* Ô nhập tìm kiếm */
+.search-input-container, .chat-input-container {
+  padding: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+#searchInput, #chatInput {
+  flex: 1;
+  padding: 10px 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 25px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+#searchInput:focus, #chatInput:focus {
+  border-color: #667eea;
+}
+
+.search-submit-btn, .chat-send-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: none;
+  background: #667eea;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+
+.search-submit-btn:hover, .chat-send-btn:hover {
+  background: #5a67d8;
+}
+
+/* Kết quả tìm kiếm */
+.search-results {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.search-result-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-result-item:hover {
+  background: #f7fafc;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-title {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 5px;
+}
+
+.result-description {
+  font-size: 13px;
+  color: #718096;
+  line-height: 1.4;
+}
+
+.no-results {
+  text-align: center;
+  padding: 30px 20px;
+  color: #a0aec0;
+}
+
+/* Chat messages */
+.chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  padding: 15px;
+  background: #f7fafc;
+}
+
+.message {
+  margin-bottom: 15px;
+  max-width: 80%;
+  clear: both;
+}
+
+.user-message {
+  float: right;
+  text-align: right;
+}
+
+.bot-message {
+  float: left;
+}
+
+.message-content {
+  padding: 10px 15px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.user-message .message-content {
+  background: #667eea;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.bot-message .message-content {
+  background: white;
+  color: #2d3748;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.message-time {
+  font-size: 11px;
+  color: #a0aec0;
+  margin-top: 5px;
+}
+
+/* Overlay */
+.corner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 9997;
+}
+
+/* Animation */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-popup.active, .chat-popup.active {
+  display: block;
+  animation: slideInUp 0.3s ease;
+}
+
+.corner-menu.active {
+  display: flex;
+  animation: slideInUp 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .corner-container {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .search-popup, .chat-popup {
+    width: calc(100vw - 40px);
+    right: 20px;
+    left: 20px;
+  }
+
+  .corner-main-btn {
+    width: 55px;
+    height: 55px;
+  }
+
+  .corner-menu-btn {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+.search-result-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.search-result-item img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-title {
+  font-weight: 500;
+}
+
+.result-price {
+  color: #e53935;
+  font-size: 14px;
+}
+
+.tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 6px;
+}
+
+.tag.brand {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.tag.category {
+  background: #fce4ec;
+  color: #ad1457;
+}
+

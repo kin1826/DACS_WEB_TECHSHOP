@@ -1,7 +1,76 @@
 <?php
 session_start();
 
+require_once 'class/db.php';
+require_once 'class/product.php';
+require_once 'class/flash_sale_manager.php';
+require_once 'class/product_image.php';
+require_once 'class/category.php';
 
+$flashSaleModel = new FlashSaleManager(); // Thay thế bằng tên model của bạn
+$productImg = new ProductImage();
+
+// Lấy flash sale đang diễn ra (active)
+$activeFlashSale = $flashSaleModel->getAllFlashSales('active');
+
+// Biến để lưu dữ liệu
+$currentFlashSale = null;
+$saleProducts = [];
+$hasFlashSale = false;
+$upcomingFlashSales = [];
+
+// Kiểm tra và lấy dữ liệu
+if (!empty($activeFlashSale)) {
+  // Lấy flash sale đầu tiên đang diễn ra
+  $currentFlashSale = $activeFlashSale[0];
+  $saleProducts = $flashSaleModel->getProductsInSaleIndex($currentFlashSale['id']);
+  $hasFlashSale = true;
+} else {
+  // Nếu không có flash sale đang diễn ra, lấy flash sale sắp diễn ra
+  $upcomingFlashSales = $flashSaleModel->getAllFlashSales('upcoming');
+}
+
+//Products
+// 1. Khởi tạo model sản phẩm
+$productModel = new Product(); // Thay bằng class thực tế của bạn
+$categoryModel = new Category();
+
+// 2. Lấy sản phẩm mới nhất (giả sử có hàm getNewestProducts)
+$newProducts = $productModel->getNewestProducts(10); // Lấy 10 sản phẩm
+
+// 4. Chuẩn bị mảng sản phẩm cho JavaScript
+$productsData = [];
+foreach ($newProducts as $product) {
+  // Lấy hình ảnh chính
+  $mainImage = $productImg->getMainImage($product['id']);
+  $imageUrl = $mainImage ? 'img/adminUP/products/' . $mainImage['image_url'] :
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
+
+  // Lấy danh mục
+  $category_if = $categoryModel->findById($product['category_id']);
+  $categoryName = !empty($category_if['name']) ? $category_if['name'] : 'Không có danh mục';
+
+  // Format giá
+  $currentPrice = !empty($product['sale_price']) ? $product['sale_price'] : $product['regular_price'];
+  $originalPrice = (!empty($product['sale_price']) && $product['sale_price'] < $product['regular_price']) ?
+    $product['regular_price'] : null;
+
+  // Lấy rating (nếu có)
+  $rating = isset($product['rate']) ? round($product['rate'], 1) : 'Chưa có đánh giá';
+  $reviewCount = isset($product['num_buy']) ? $product['num_buy'] : 'Chưa có lượt mua';
+
+  $productsData[] = [
+    'id' => $product['id'],
+    'name' => $product['name_pr'],
+    'category' => $categoryName,
+    'current_price' => number_format($currentPrice, 0, ',', '.') . 'đ',
+    'original_price' => $originalPrice ? number_format($originalPrice, 0, ',', '.') . 'đ' : null,
+    'rating' => $rating,
+    'reviews' => $reviewCount,
+    'image' => $imageUrl,
+    'slug' => $product['slug'] ?? ''
+  ];
+}
 ?>
 
 <!doctype html>
@@ -33,8 +102,9 @@ session_start();
 
 </head>
 
-<?php include 'header.php'?>
 
+<?php include 'header.php'?>
+<?php include 'cornerButton.php'?>
 <body>
 <!-- Hero Slider -->
 <section class="hero-slider">
@@ -42,8 +112,8 @@ session_start();
     <div class="slide">
       <img src="img/slideintro/a27d24_82d036f8249d4d008426380b6163004c~mv2.png" alt="Fashion Collection">
       <div class="slide-content">
-        <h2>Bộ Sưu Tập Mùa Hè 2023</h2>
-        <p>Khám phá những xu hướng thời trang mới nhất với thiết kế độc đáo và chất lượng cao cấp</p>
+        <h2>Bộ Sưu Tập</h2>
+        <p>Khám phá những xu hướng công nghệ mới nhất năm nay, hiệu năng cực đỉnh.</p>
         <a href="#" class="btn">Mua Ngay</a>
       </div>
     </div>
@@ -60,18 +130,40 @@ session_start();
       <div class="slide-content">
         <h2>Giảm Giá Lên Đến 50%</h2>
         <p>Ưu đãi đặc biệt trong tháng này, đừng bỏ lỡ cơ hội mua sắm với giá tốt nhất</p>
-        <a href="#" class="btn">Xem Ngay</a>
+        <a href="#flashsale" class="btn">Xem Ngay</a>
       </div>
     </div>
     <div class="slide">
-      <img src="img/slideintro/pngtree-rgb-lit-gaming-keyboard-and-3d-rendered-pc-case-for-ultimate-image_3705804.jpg" alt="Limited Edition">
+      <img src="img/slideintro/1765974319_6942a12fa5b7e.jpg" alt="Limited Edition">
       <div class="slide-content">
-        <h2>Phiên Bản Giới Hạn</h2>
-        <p>Sở hữu những sản phẩm độc quyền với số lượng có hạn, chỉ dành cho khách hàng đặc biệt</p>
-        <a href="#" class="btn">Tìm Hiểu Thêm</a>
+        <h2>Tự Build cho mình 1 bộ PC ngay tại shop</h2>
+        <p>Shop hỗ trợ hướng dẫn, build PC ngay tại quán, hãy đến thử ngay nhé</p>
+        <a href="contact.php" class="btn">Tìm Hiểu Thêm</a>
       </div>
     </div>
   </div>
+
+<!--  <div class="slides">-->
+<!--    --><?php
+//    $slideDir = __DIR__ . '/img/slideintro/';
+//    $slideUrl = 'img/slideintro/';
+//
+//    $images = glob($slideDir . '*.{jpg,jpeg,png,webp}', GLOB_BRACE);
+//
+//    foreach ($images as $img):
+//      $fileName = basename($img);
+//      ?>
+<!--      <div class="slide">-->
+<!--        <img src="--><?php //= $slideUrl . $fileName ?><!--" alt="Slide">-->
+<!--        <div class="slide-content">-->
+<!--          <h2>Slide giới thiệu</h2>-->
+<!--          <p>Nội dung mô tả cho slide</p>-->
+<!--          <a href="#" class="btn">Xem thêm</a>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    --><?php //endforeach; ?>
+<!--  </div>-->
+
   <div class="slider-nav">
     <div class="slider-dot active"></div>
     <div class="slider-dot"></div>
@@ -84,235 +176,125 @@ session_start();
   </div>
 </section>
 
-<!-- Flash Sale Section Updated -->
-<section class="flash-sale">
+<section class="flash-sale" id="flashsale">
   <div class="fl container">
-    <div class="sale-header">
-      <h2 class="sale-title"><i class="fa-solid fa-bolt fa-bounce" style="color: #e6b400; margin-right: 20px"></i>FLASH SALE</h2>
-      <div class="countdown" id="countdown">
-        <div class="countdown-item">
-          <span class="countdown-number" id="hours">12</span>
-          <span class="countdown-label">Giờ</span>
-        </div>
-        <div class="countdown-item">
-          <span class="countdown-number" id="minutes">45</span>
-          <span class="countdown-label">Phút</span>
-        </div>
-        <div class="countdown-item">
-          <span class="countdown-number" id="seconds">30</span>
-          <span class="countdown-label">Giây</span>
-        </div>
-      </div>
-      <p>Ưu đãi đặc biệt chỉ diễn ra trong thời gian giới hạn. Nhanh tay kẻo lỡ!</p>
-    </div>
+    <?php if ($hasFlashSale): ?>
+      <!-- Hiển thị khi có flash sale đang diễn ra -->
+      <div class="sale-header">
+        <h2 class="sale-title">
+          <i class="fa-solid fa-bolt fa-bounce" style="color: #e6b400; margin-right: 20px"></i>
+          FLASH SALE
+        </h2>
 
-    <div class="sale-container">
-      <div class="sale-nav prev" id="salePrev">
-        <i class="fas fa-chevron-left"></i>
-      </div>
-
-      <div class="sale-products" id="saleProducts">
-        <!-- Sản phẩm 1 -->
-        <div class="sale-product">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sale Product">
-            <span class="sale-badge">-45%</span>
+        <!-- Countdown sẽ được cập nhật bằng JavaScript -->
+        <div class="countdown" id="countdown">
+          <div class="countdown-item">
+            <span class="countdown-number" id="hours">00</span>
+            <span class="countdown-label">Giờ</span>
           </div>
-          <div class="product-info">
-            <div class="product-name">Giày Chạy Bộ Adidas Ultraboost</div>
-            <div class="sale-price">
-              <span class="discount-price">1.299.000đ</span>
-              <span class="original-price">2.359.000đ</span>
-              <span class="discount-percent">-45%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress" style="width: 75%"></div>
-            </div>
-            <div class="sold-text">Đã bán 75/100 sản phẩm</div>
-            <button class="add-to-cart">
-              <i class="fas fa-bolt"></i>
-              Mua Ngay
-            </button>
+          <div class="countdown-item">
+            <span class="countdown-number" id="minutes">00</span>
+            <span class="countdown-label">Phút</span>
+          </div>
+          <div class="countdown-item">
+            <span class="countdown-number" id="seconds">00</span>
+            <span class="countdown-label">Giây</span>
           </div>
         </div>
 
-        <!-- Sản phẩm 2 -->
-        <div class="sale-product">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sale Product">
-            <span class="sale-badge">-60%</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">Tai Nghe Bluetooth Sony WH-1000XM4</div>
-            <div class="sale-price">
-              <span class="discount-price">4.999.000đ</span>
-              <span class="original-price">7.499.000đ</span>
-              <span class="discount-percent">-60%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress" style="width: 90%"></div>
-            </div>
-            <div class="sold-text">Đã bán 45/50 sản phẩm</div>
-            <button class="add-to-cart">
-              <i class="fas fa-bolt"></i>
-              Mua Ngay
-            </button>
-          </div>
-        </div>
+        <p style="font-size: 24px; color: #ffffff;">Ưu đãi đặc biệt chỉ diễn ra trong thời gian giới hạn. Nhanh tay kẻo lỡ!</p>
 
-        <!-- Sản phẩm 3 -->
-        <div class="sale-product">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sale Product">
-            <span class="sale-badge">-55%</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">Smartwatch Samsung Galaxy Watch5</div>
-            <div class="sale-price">
-              <span class="discount-price">3.599.000đ</span>
-              <span class="original-price">7.999.000đ</span>
-              <span class="discount-percent">-55%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress" style="width: 60%"></div>
-            </div>
-            <div class="sold-text">Đã bán 30/50 sản phẩm</div>
-            <button class="add-to-cart">
-              <i class="fas fa-bolt"></i>
-              Mua Ngay
-            </button>
-          </div>
-        </div>
-
-        <!-- Sản phẩm 4 -->
-        <div class="sale-product">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sale Product">
-            <span class="sale-badge">-40%</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">Loa Bluetooth JBL Charge 5</div>
-            <div class="sale-price">
-              <span class="discount-price">2.399.000đ</span>
-              <span class="original-price">3.999.000đ</span>
-              <span class="discount-percent">-40%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress" style="width: 80%"></div>
-            </div>
-            <div class="sold-text">Đã bán 32/40 sản phẩm</div>
-            <button class="add-to-cart">
-              <i class="fas fa-bolt"></i>
-              Mua Ngay
-            </button>
-          </div>
-        </div>
-
-        <!-- Sản phẩm 5 -->
-        <div class="sale-product">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sale Product">
-            <span class="sale-badge">-50%</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">Máy Ảnh Canon EOS R50</div>
-            <div class="sale-price">
-              <span class="discount-price">12.999.000đ</span>
-              <span class="original-price">25.999.000đ</span>
-              <span class="discount-percent">-50%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress" style="width: 45%"></div>
-            </div>
-            <div class="sold-text">Đã bán 9/20 sản phẩm</div>
-            <button class="add-to-cart">
-              <i class="fas fa-bolt"></i>
-              Mua Ngay
-            </button>
-          </div>
-        </div>
-
-        <!-- Sản phẩm 6 -->
-        <div class="sale-product">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1605236453806-6ff36851218e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sale Product">
-            <span class="sale-badge">-35%</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">Bàn Phím Cơ Logitech G Pro</div>
-            <div class="sale-price">
-              <span class="discount-price">1.799.000đ</span>
-              <span class="original-price">2.769.000đ</span>
-              <span class="discount-percent">-35%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress" style="width: 70%"></div>
-            </div>
-            <div class="sold-text">Đã bán 21/30 sản phẩm</div>
-            <button class="add-to-cart">
-              <i class="fas fa-bolt"></i>
-              Mua Ngay
-            </button>
-          </div>
-        </div>
-
-        <!-- Sản phẩm 7 -->
-        <div class="sale-product">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sale Product">
-            <span class="sale-badge">-55%</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">Máy Tính Bảng iPad Air 5</div>
-            <div class="sale-price">
-              <span class="discount-price">14.999.000đ</span>
-              <span class="original-price">33.299.000đ</span>
-              <span class="discount-percent">-55%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress" style="width: 85%"></div>
-            </div>
-            <div class="sold-text">Đã bán 17/20 sản phẩm</div>
-            <button class="add-to-cart">
-              <i class="fas fa-bolt"></i>
-              Mua Ngay
-            </button>
-          </div>
-        </div>
-
-        <!-- Sản phẩm 8 -->
-        <div class="sale-product">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1541807084-5c52b6b3adef?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sale Product">
-            <span class="sale-badge">-30%</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">Chuột Gaming Razer Viper</div>
-            <div class="sale-price">
-              <span class="discount-price">899.000đ</span>
-              <span class="original-price">1.284.000đ</span>
-              <span class="discount-percent">-30%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress" style="width: 65%"></div>
-            </div>
-            <div class="sold-text">Đã bán 26/40 sản phẩm</div>
-            <button class="add-to-cart">
-              <i class="fas fa-bolt"></i>
-              Mua Ngay
-            </button>
-          </div>
+        <!-- Thông tin thời gian -->
+        <div class="sale-time-info" style="margin-top: 10px; font-size: 24px; color: #ffffff;">
+          <i class="far fa-clock"></i>
+          Thời gian:
+          <?php echo date('H:i d/m/Y', strtotime($currentFlashSale['time_start'])); ?>
+          -
+          <?php echo date('H:i d/m/Y', strtotime($currentFlashSale['time_end'])); ?>
         </div>
       </div>
 
-      <div class="sale-nav next" id="saleNext">
-        <i class="fas fa-chevron-right"></i>
-      </div>
-    </div>
+      <div class="sale-container">
+        <div class="sale-nav prev" id="salePrev">
+          <i class="fas fa-chevron-left"></i>
+        </div>
 
-    <div class="sale-dots" id="saleDots">
-      <!-- Dots sẽ được tạo bằng JavaScript -->
-    </div>
+        <div class="sale-products" id="saleProducts">
+          <?php if (!empty($saleProducts)): ?>
+            <?php foreach ($saleProducts as $product): ?>
+              <div class="sale-product">
+                <div class="product-img">
+                  <?php
+                  $productImage = $productImg->getMainImage($product['product_id'])
+                  ?>
+                  <img src="<?php echo 'img/adminUP/products/' . $productImage['image_url']; ?>"
+                       alt="<?php echo htmlspecialchars($productImage['alt_text']); ?>">
+                  <span class="sale-badge">-<?php echo $product['discount_percent']; ?>%</span>
+                </div>
+                <div class="product-info">
+                  <div class="product-name"><?php echo htmlspecialchars($product['product_name']); ?></div>
+                  <div class="sale-price">
+                    <?php
+                    $salePrice = $product['calculated_sale_price'];
+                    $originalPrice = $product['original_price'];
+                    ?>
+                    <span class="discount-price">
+                                            <?php echo number_format($salePrice, 0, ',', '.'); ?>đ
+                                        </span>
+                    <span class="original-price">
+                                            <?php echo number_format($originalPrice, 0, ',', '.'); ?>đ
+                                        </span>
+                    <span class="discount-percent">-<?php echo $product['discount_percent']; ?>%</span>
+                  </div>
+                  <button class="add-to-cart"
+                          data-product-id="<?php echo $product['product_id']; ?>">
+                    <i class="fas fa-bolt"></i>
+                    Mua Ngay
+                  </button>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <div class="no-products">
+              <p>Hiện chưa có sản phẩm nào trong đợt flash sale này.</p>
+            </div>
+          <?php endif; ?>
+        </div>
+
+        <div class="sale-nav next" id="saleNext">
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+      <div class="sale-dots" id="saleDots">
+        <!-- Dots sẽ được tạo bằng JavaScript -->
+      </div>
+
+      <!-- Ẩn dữ liệu thời gian kết thúc để JavaScript sử dụng -->
+      <input type="hidden" id="flashSaleEndTime"
+             value="<?php echo $currentFlashSale['time_end']; ?>">
+
+    <?php elseif (!empty($upcomingFlashSales)): ?>
+      <!-- Hiển thị khi có flash sale sắp diễn ra -->
+      <div class="sale-header">
+        <h2 class="sale-title">
+          <i class="fa-solid fa-clock fa-spin" style="color: #007bff; margin-right: 20px"></i>
+          FLASH SALE SẮP DIỄN RA
+        </h2>
+        <p>Chương trình flash sale tiếp theo sẽ bắt đầu vào
+          <strong><?php echo date('H:i d/m/Y', strtotime($upcomingFlashSales[0]['time_start'])); ?></strong>
+        </p>
+      </div>
+      <div class="upcoming-message">
+        <p>Hãy quay lại sau để không bỏ lỡ ưu đãi!</p>
+      </div>
+
+    <?php else: ?>
+      <!-- Hiển thị khi không có flash sale nào -->
+      <div class="no-flash-sale">
+        <p>Hiện không có chương trình flash sale nào đang diễn ra.</p>
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 
@@ -320,12 +302,39 @@ session_start();
 <section class="products-container">
   <div class="container">
     <div class="section-title">
-      <h2>Sản Phẩm Mới Nhất</h2>
+      <h2>Sản Phẩm</h2>
     </div>
     <div class="products-scroll">
       <div class="products-track" id="newProductsTrack">
-        <!-- Sản phẩm sẽ được thêm bằng JavaScript -->
+        <?php foreach ($productsData as $product_ec): ?>
+          <div class="product-card">
+            <div class="product-img">
+              <img src="<?php echo $product_ec['image']?>" alt="">
+            </div>
+            <div class="product-info">
+              <div class="product-category"><?php echo $product_ec['category']?></div>
+              <div class="product-name"><?php echo $product_ec['name']?></div>
+              <div class="product-price">
+                <span class="current-price"><?php echo $product_ec['current_price']?></span>
+                <span class="original-price"><?php echo $product_ec['original_price']?></span>
+              </div>
+              <div class="product-rating">
+                <div class="stars">
+                  <?php echo $product_ec['rating']?>
+                </div>
+                <span class="rating-count">(<?php echo $product_ec['reviews']?>)</span>
+              </div>
+              <a class="add-to-cart" href="product_detail.php?id=<?php echo $product_ec['id']; ?>">
+                Xem thêm
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        <?php endforeach; ?>
       </div>
+    </div>
+    <div class="section-title">
+      <a class="btn btn-see-more" href="products.php">Xem tất cả sản phẩm <i class="fa-solid fa-arrow-right"></i></a>
     </div>
   </div>
 </section>
@@ -340,13 +349,13 @@ session_start();
     <!-- Best Seller -->
     <div class="featured-item">
       <div class="featured-img">
-        <img src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Best Seller">
+        <img src="https://cafefcdn.com/203337114487263232/2025/7/27/iphone-17-pro-orange-1753607288074-17536072883691184565064.jpg" alt="Best Seller">
       </div>
       <div class="featured-content">
         <span class="featured-badge">Bán Chạy Nhất</span>
-        <h3>Áo Thun Premium Cotton</h3>
-        <p>Chất liệu cotton cao cấp, thoáng mát và thấm hút mồ hôi tốt. Thiết kế đơn giản nhưng không kém phần thời trang, phù hợp với mọi hoàn cảnh.</p>
-        <p>Đã bán: 1,250+ sản phẩm</p>
+        <h3>Điện thoại IPhone 17 Pro Max</h3>
+        <p>iPhone 17 Pro Max tại Việt Nam có màn hình Super Retina XDR 6,9 inch, chip A19 Pro 6 nhân, RAM 12GB, bộ nhớ trong từ 256GB đến 2TB, hệ thống 3 camera sau 48MP và pin dung lượng lớn. Thiết bị có thiết kế khung nhôm nguyên khối, mặt kính Ceramic Shield 2, và các tùy chọn màu sắc như Bạc, Cam Vũ Trụ, Xanh Đậm.</p>
+        <p>Đã bán: 1 sản phẩm</p>
         <a href="#" class="btn">Mua Ngay</a>
       </div>
     </div>
@@ -354,13 +363,13 @@ session_start();
     <!-- Newest -->
     <div class="featured-item reverse">
       <div class="featured-img">
-        <img src="https://images.unsplash.com/photo-1505022610480-5e0b09ae7c40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1970&q=80" alt="Newest">
+        <img src="https://product.hstatic.net/1000187560/product/tai-nghe-bluetooth-chup-tai-havit-h667bt-den-1_3423bc0d67db4c5e92a5e561b8482cca_large.jpg" alt="Newest">
       </div>
       <div class="featured-content">
         <span class="featured-badge">Mới Nhất</span>
-        <h3>Giày Thể Thao Ultra Boost</h3>
-        <p>Công nghệ đệm khí tiên tiến, mang lại cảm giác êm ái và hỗ trợ tối đa cho đôi chân của bạn. Thiết kế trẻ trung, năng động.</p>
-        <p>Phiên bản giới hạn 2023</p>
+        <h3>Tai nghe Bluetooth Headphone Havit H667BT Pin 20 tiếng | Kết Nối 2 Thiết Bị | BT 5.3</h3>
+        <p>Tai nghe Bluetooth Headphone Havit H667BT mang kiểu dáng năng động, gam màu thanh lịch, khả năng kết nối linh hoạt có dây và không dây, tích hợp mic thoại,... đáp ứng tốt nhu cầu sử dụng cơ bản của người dùng phổ thông.</p>
+        <p>Phiên bản giới hạn 2025</p>
         <a href="#" class="btn">Mua Ngay</a>
       </div>
     </div>
@@ -368,14 +377,14 @@ session_start();
     <!-- Rare -->
     <div class="featured-item">
       <div class="featured-img">
-        <img src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1987&q=80" alt="Rare">
+        <img src="https://tintuc.dienthoaigiakho.vn/wp-content/uploads/2025/05/iphone-18-khi-nao-ra-mat.3.jpg" alt="Rare">
       </div>
       <div class="featured-content">
         <span class="featured-badge">Độc Quyền</span>
-        <h3>Túi Xách Da Thật Handmade</h3>
-        <p>Được làm thủ công từ da bò thật, mỗi sản phẩm là một tác phẩm nghệ thuật độc nhất. Chỉ sản xuất 50 chiếc trên toàn thế giới.</p>
+        <h3>Điện thoại IPhone 18 Pro Max </h3>
+        <p>Hé lộ bí mật từ nhà táo với phiên bản IPhone 18 series với những hứa hẹn về nâng cấp về mọi mặt.</p>
         <p>Số lượng cực kỳ hạn chế</p>
-        <a href="#" class="btn">Đặt Trước</a>
+        <a href="#" class="btn">Mua ngay</a>
       </div>
     </div>
   </div>
@@ -403,7 +412,7 @@ session_start();
       <div class="review-card">
         <div class="review-header">
           <div class="review-avatar">
-            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Customer Avatar">
+            <img src="https://media.baoquangninh.vn/dataimages/202006/original/images1398180_viet2.jpg" alt="Customer Avatar">
           </div>
           <div class="review-info">
             <h4>Nguyễn Thị Minh</h4>
@@ -417,13 +426,13 @@ session_start();
           </div>
         </div>
         <div class="review-content">
-          "Tôi rất hài lòng với chất lượng sản phẩm. Áo thun mặc rất thoải mái, chất liệu cotton mềm mại. Dịch vụ giao hàng nhanh chóng, nhân viên tư vấn nhiệt tình. Chắc chắn sẽ ủng hộ shop dài dài!"
+          "Chiếc điện thoại này thực sự vượt xa kỳ vọng với hiệu năng xử lý cực kỳ mượt mà ngay cả khi chơi các game đồ họa nặng, cùng với thời lượng pin ấn tượng giúp tôi thoải mái sử dụng trọn vẹn một ngày làm việc. Hệ thống camera kép cũng cho ra những bức ảnh sắc nét và màu sắc trung thực đáng ngạc nhiên."
         </div>
       </div>
       <div class="review-card">
         <div class="review-header">
           <div class="review-avatar">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Customer Avatar">
+            <img src="https://jbagy.me/wp-content/uploads/2025/03/Hinh-anh-avatar-anime-nu-cute-2.jpg" alt="Customer Avatar">
           </div>
           <div class="review-info">
             <h4>Trần Văn Hùng</h4>
@@ -431,19 +440,19 @@ session_start();
               <i class="fas fa-star"></i>
               <i class="fas fa-star"></i>
               <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
               <i class="fas fa-star-half-alt"></i>
+              <i class="fa-regular fa-star"></i>
             </div>
           </div>
         </div>
         <div class="review-content">
-          "Giày thể thao mua tại shop đẹp và chất lượng hơn cả mong đợi. Đế giày êm ái, ôm chân, đi cả ngày không thấy mỏi. Size chuẩn với description, giao hàng đúng hẹn. Rất đáng để mua!"
+          "Tôi hơi thất vọng về chất liệu của chiếc đồng hồ thông minh này, dây đeo có vẻ kém bền so với mức giá cao cấp, tuy nhiên, các tính năng theo dõi sức khỏe và GPS lại hoạt động cực kỳ chính xác và là công cụ hỗ trợ tập luyện không thể thiếu của tôi."
         </div>
       </div>
       <div class="review-card">
         <div class="review-header">
           <div class="review-avatar">
-            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Customer Avatar">
+            <img src="https://png.pngtree.com/thumb_back/fh260/background/20221021/pngtree-happy-asian-woman-cooking-in-the-kitchen-housewife-food-vietnamese-photo-image_39055990.jpg" alt="Customer Avatar">
           </div>
           <div class="review-info">
             <h4>Lê Thị Hương</h4>
@@ -457,7 +466,7 @@ session_start();
           </div>
         </div>
         <div class="review-content">
-          "Túi xách da thật đẹp xuất sắc! Chất da mềm, đường may tỉ mỉ, khóa kéo trơn tru. Màu sắc đúng như hình, thiết kế thời trang và rất tiện dụng. Đóng gói cẩn thận, sản phẩm xứng đáng với giá tiền."
+          "Loa Bluetooth này có thiết kế nhỏ gọn và đẹp mắt, rất tiện mang theo, nhưng âm bass lại hơi yếu và bị rè nhẹ khi mở âm lượng tối đa. Tuy nhiên, ở mức âm lượng vừa phải, chất âm vẫn trong trẻo, phù hợp để nghe nhạc nền trong phòng làm việc."
         </div>
       </div>
     </div>
@@ -473,28 +482,28 @@ session_start();
     <div class="news-grid">
       <div class="news-card">
         <div class="news-image">
-          <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Tech News">
+          <img src="https://cdn.tgdd.vn/Files/2023/09/15/1547384/5copy-150923-103044.jpg" alt="Tech News">
         </div>
         <div class="news-content">
           <span class="news-category">Tin Mới</span>
           <h3 class="news-title">iPhone 15 Series Chính Thức Ra Mắt Với Tính Năng Đột Phá</h3>
           <p class="news-excerpt">Apple vừa chính thức trình làng dòng iPhone 15 với camera 48MP, chip A17 Pro và cổng USB-C đầu tiên...</p>
           <div class="news-meta">
-            <span><i class="far fa-clock"></i> 2 giờ trước</span>
-            <span><i class="far fa-eye"></i> 1.2K lượt xem</span>
+            <span><i class="far fa-clock"></i> 2 tháng trước</span>
+            <span><i class="far fa-eye"></i> 1.1K lượt xem</span>
           </div>
         </div>
       </div>
       <div class="news-card">
         <div class="news-image">
-          <img src="https://images.unsplash.com/photo-1542751110-97427bbecf20?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Guide">
+          <img src="https://vitinhtrangia.com/wp-content/uploads/2022/08/pc-gaming-i5-12600k-rtx-3060-12gb-1.jpg" alt="Guide">
         </div>
         <div class="news-content">
           <span class="news-category">Hướng Dẫn</span>
           <h3 class="news-title">Hướng Dẫn Build PC Gaming Tối Ưu Với Ngân Sách 20 Triệu</h3>
           <p class="news-excerpt">Tự lắp ráp PC gaming không khó với hướng dẫn chi tiết này. Tối ưu hiệu năng chơi game với mức ngân sách hợp lý...</p>
           <div class="news-meta">
-            <span><i class="far fa-clock"></i> 1 ngày trước</span>
+            <span><i class="far fa-clock"></i> 2 ngày trước</span>
             <span><i class="far fa-eye"></i> 3.4K lượt xem</span>
           </div>
         </div>
