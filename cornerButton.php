@@ -1,4 +1,3 @@
-
 <!-- cornerButton.php -->
 <div class="corner-container">
   <!-- Nút chính ở góc -->
@@ -55,6 +54,36 @@
     </div>
   </div>
 
+  <div class="compare-popup" id="comparePopup">
+    <div class="chat-header">
+      <h3>So sánh sản phẩm</h3>
+      <button class="close-btn" onclick="closeCurrentPopup()">&times;</button>
+    </div>
+
+    <div class="compare-body">
+      <div class="compare-slot" data-slot="1" id="compareSlot1">
+        <div class="compare-placeholder">
+          <i class="fa-solid fa-plus"></i>
+          <p>Chọn sản phẩm 1</p>
+        </div>
+      </div>
+
+      <div class="compare-slot" data-slot="2" id="compareSlot2">
+        <div class="compare-placeholder">
+          <i class="fa-solid fa-plus"></i>
+          <p>Chọn sản phẩm 2</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-actions">
+      <button id="goCompareBtn" disabled>So sánh</button>
+      <button id="clearCompareBtn">Xóa sản phẩm</button>
+    </div>
+  </div>
+
+
+
   <!-- Overlay -->
   <div class="corner-overlay" id="cornerOverlay"></div>
 </div>
@@ -98,6 +127,7 @@
   const cornerMenu = document.getElementById('cornerMenu');
   const searchPopup = document.getElementById('searchPopup');
   const chatPopup = document.getElementById('chatPopup');
+  const comparePopup = document.getElementById("comparePopup")
   const cornerOverlay = document.getElementById('cornerOverlay');
   const searchInput = document.getElementById('searchInput');
   const searchResults = document.getElementById('searchResults');
@@ -189,8 +219,10 @@
       chatPopup.classList.add('active');
       currentPopup = chatPopup;
       chatInput.focus();
+    } else if (type === "compare") {
+      comparePopup.classList.add('active');
+      currentPopup = comparePopup;
     }
-
     cornerOverlay.style.display = 'block';
     cornerMenu.classList.remove('active');
     cornerMainBtn.classList.remove('active');
@@ -348,3 +380,135 @@
     }
   });
 </script>
+
+<script>
+  let compareState = {
+    category_id: null,
+    products: []
+  };
+
+  /* =========================
+     MỞ POPUP TỪ NÚT GÓC
+  ========================== */
+  document.querySelector('.compare-btn').addEventListener('click', () => {
+    openPopup('compare');
+    loadCompareSession();
+  });
+
+  /* =========================
+     CLICK SLOT → ĐI CHỌN SP
+  ========================== */
+  document.getElementById('compareSlot1').onclick = () => {
+    window.location.href = 'products.php?select_compare=1';
+  };
+
+  document.getElementById('compareSlot2').onclick = () => {
+    if (!compareState.category_id) {
+      alert('Vui lòng chọn sản phẩm 1 trước');
+      return;
+    }
+    window.location.href =
+      `products.php?category=${compareState.category_id}&select_compare=2`;
+  };
+
+  /* =========================
+     LOAD SESSION ĐỂ HIỂN THỊ
+  ========================== */
+  function loadCompareSession() {
+    fetch('/apiPrivate/compare_get.php')
+      .then(res => res.json())
+      .then(data => {
+        compareState = data;
+        updateCompareUI();
+      });
+  }
+
+  function fetchProduct(productId) {
+    return fetch(`/apiPrivate/pro_get.php?id=${productId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          throw new Error(data.message);
+        }
+        return data.product;
+      });
+  }
+
+
+  function updateCompareUI() {
+    ['compareSlot1', 'compareSlot2'].forEach((id, index) => {
+      const slot = document.getElementById(id);
+      const pid = compareState.products[index];
+
+      // CHƯA CÓ SẢN PHẨM
+      if (!pid) {
+        slot.classList.remove('filled');
+        slot.innerHTML = `
+        <div class="compare-placeholder">
+          <i class="fa-solid fa-plus"></i>
+          <p>Chọn sản phẩm ${index + 1}</p>
+        </div>
+      `;
+        return;
+      }
+
+      // ĐANG LOAD
+      slot.classList.add('filled');
+      slot.innerHTML = `
+      <div class="compare-loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+      </div>
+    `;
+
+      // CÓ SẢN PHẨM → LẤY DATA
+      fetchProduct(pid).then(product => {
+        slot.innerHTML = `
+        <div class="compare-product">
+          <img src="img/adminUP/products/${product.image_url}" alt="${product.alt_text || product.name_pr}">
+          <div class="compare-name">${product.name_pr}</div>
+          <div class="compare-price">${formatCurrency(product.sale_price)}</div>
+        </div>
+      `;
+      }).catch(() => {
+        slot.innerHTML = `
+        <div class="compare-error">
+          Không tải được sản phẩm
+        </div>
+      `;
+      });
+    });
+
+    document.getElementById('goCompareBtn').disabled =
+      compareState.products.length < 2;
+    document.getElementById('clearCompareBtn').disabled =
+      compareState.products.length === 0;
+  }
+
+  function clearCompare() {
+    // reset state phía client
+    compareState = {
+      category_id: null,
+      products: []
+    };
+
+    // gọi API xoá session
+    fetch('/apiPrivate/compare_clear.php')
+      .finally(() => {
+        updateCompareUI();
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+
+    document.getElementById('goCompareBtn').onclick = () => {
+      window.location.href = 'compare.php';
+    };
+
+    document.getElementById('clearCompareBtn')
+      .addEventListener('click', clearCompare);
+
+  });
+
+</script>
+
+
