@@ -1,0 +1,63 @@
+.compare-page {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.compare-page h2 {
+  margin-bottom: 20px;
+}
+
+.compare-actions-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #0ea5a4;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn.danger {
+  background: #ef4444;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.compare-table th,
+.compare-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  vertical-align: top;
+}
+
+.compare-table th {
+  background: #f9fafb;
+}
+
+.compare-product {
+  text-align: center;
+}
+
+.compare-product img {
+  max-width: 120px;
+  margin-bottom: 8px;
+}
+
+.compare-product .name {
+  font-weight: 600;
+}
+
+.compare-product .price {
+  color: #e11d48;
+  font-weight: 600;
+}
