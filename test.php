@@ -1,70 +1,276 @@
-<?php
-// test-config.php
-$configGG['GOOGLE_CLIENT_ID'] = '1091283087850-a453f1ll8q4p08pc45tb8g6dsdh96rr3.apps.googleusercontent.com';
-$configGG['GOOGLE_REDIRECT_URI'] = 'http://localhost:8000/login.php';
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Page</title>
+</head>
+<body>
+<h1>Test Popup Notification</h1>
 
-echo "<h2>🔍 GOOGLE OAUTH CONFIGURATION TEST</h2>";
+<button onclick="showSuccess('Lưu thành công!')">Success</button>
+<button onclick="showError('Có lỗi xảy ra')">Error</button>
+<button onclick="showInfo('Đang xử lý...')">Info</button>
 
-// Hiển thị thông tin config
-echo "<div style='background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;'>";
-echo "<p><strong>Client ID:</strong> " . $configGG['GOOGLE_CLIENT_ID'] . "</p>";
-echo "<p><strong>Redirect URI trong CODE:</strong> <code style='background: yellow;'>" . $configGG['GOOGLE_REDIRECT_URI'] . "</code></p>";
-echo "</div>";
+<!-- NOTIFICATION POPUP - COPY THIS ENTIRE BLOCK -->
+<style>
+  /* CSS for Notification Popup */
+  #notificationPopup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    backdrop-filter: blur(5px);
+  }
 
-// Tạo OAuth URL
-$params = [
-  'client_id' => $configGG['GOOGLE_CLIENT_ID'],
-  'redirect_uri' => $configGG['GOOGLE_REDIRECT_URI'],
-  'response_type' => 'code',
-  'scope' => 'email profile',
-  'access_type' => 'offline',
-  'prompt' => 'select_account'
-];
+  #notificationContainer {
+    position: relative;
+    width: 320px;
+    max-width: 90vw;
+    padding: 30px 25px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37),
+    inset 0 4px 20px rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    text-align: center;
+    overflow: hidden;
+    animation: liquidDrop 0.6s ease-out;
+  }
 
-$url = 'https://accounts.google.com/o/oauth2/auth?' . http_build_query($params);
-echo "<p><strong>OAuth URL:</strong> <a href='$url' target='_blank' style='color: blue; text-decoration: underline;'>CLICK ĐỂ TEST</a></p>";
+  /* Water drop effect */
+  @keyframes liquidDrop {
+    0% {
+      transform: scale(0) translateY(-50px);
+      opacity: 0;
+      border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    }
+    50% {
+      transform: scale(1.1) translateY(10px);
+      border-radius: 50% 50% 30% 70% / 50% 40% 60% 50%;
+    }
+    100% {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+      border-radius: 20px;
+    }
+  }
 
-// Phân tích URL
-echo "<h3>📊 PHÂN TÍCH URL OAUTH:</h3>";
-echo "<div style='background: #e8f4fd; padding: 10px; border-left: 4px solid #2196F3;'>";
-foreach ($params as $key => $value) {
-  echo "<p><strong>$key:</strong> <code>$value</code></p>";
-}
-echo "</div>";
+  .liquid-effect {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    animation: liquidFlow 3s infinite linear;
+    opacity: 0.3;
+  }
 
-// KIỂM TRA SỰ KHỚP NHAU
-echo "<h3>✅ KIỂM TRA SỰ KHỚP NHAU:</h3>";
+  @keyframes liquidFlow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
 
-// Giả sử đây là URI bạn đã nhập trong Google Console
-$google_console_uri = 'http://localhost:8000/login.php'; // THAY BẰNG URI BẠN ĐÃ NHẬP TRONG GOOGLE CONSOLE
+  .notification-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
 
-echo "<p>Redirect URI trong <strong>CODE</strong>: <code style='background: " . ($configGG['GOOGLE_REDIRECT_URI'] === $google_console_uri ? '#90EE90' : '#FFB6C1') . ";'>" . $configGG['GOOGLE_REDIRECT_URI'] . "</code></p>";
-echo "<p>Redirect URI trong <strong>GOOGLE CONSOLE</strong>: <code style='background: " . ($configGG['GOOGLE_REDIRECT_URI'] === $google_console_uri ? '#90EE90' : '#FFB6C1') . ";'>" . $google_console_uri . "</code></p>";
+  .notification-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
 
-if ($configGG['GOOGLE_REDIRECT_URI'] === $google_console_uri) {
-  echo "<p style='color: green; font-size: 18px; font-weight: bold;'>🎉 HOÀN TOÀN KHỚP NHAU!</p>";
-  echo "<p style='color: green;'>Mọi thứ đã được cấu hình đúng. Vấn đề có thể ở chỗ khác.</p>";
-} else {
-  echo "<p style='color: red; font-size: 18px; font-weight: bold;'>❌ KHÔNG KHỚP NHAU!</p>";
-  echo "<p style='color: red;'>Sửa Google Console để khớp với: <code>" . $configGG['GOOGLE_REDIRECT_URI'] . "</code></p>";
-}
+  .notification-message {
+    font-size: 16px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 20px;
+  }
 
-// Hướng dẫn sửa
-echo "<h3>🔧 HƯỚNG DẪN SỬA:</h3>";
-echo "<ol>
-<li>Vào <strong>Google Cloud Console</strong> → <strong>APIs & Services</strong> → <strong>Credentials</strong></li>
-<li>Click vào <strong>OAuth 2.0 Client ID</strong> của bạn</li>
-<li>Trong mục <strong>Authorized redirect URIs</strong>, THÊM:</li>
-</ol>";
-echo "<p><code style='background: #e8f4fd; padding: 5px; display: inline-block;'>" . $configGG['GOOGLE_REDIRECT_URI'] . "</code></p>";
-echo "<p>Sau đó <strong>SAVE</strong> và đợi 2-3 phút.</p>";
+  .notification-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
 
-// Test link
-echo "<h3>🧪 TEST NGAY:</h3>";
-echo "<p><a href='$url' target='_blank' style='background: #4285f4; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; display: inline-block;'>CLICK ĐỂ TEST ĐĂNG NHẬP GOOGLE</a></p>";
-echo "<p><small>Mở link này trong <strong>Incognito window</strong> để test</small></p>";
+  .notification-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+  }
 
-// Debug thêm
-echo "<h3>🐛 DEBUG INFO:</h3>";
-echo "<p><strong>Current URL:</strong> " . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]</p>";
-?>
+  /* Colors */
+  .notification-success .notification-icon { color: #4ade80; }
+  .notification-error .notification-icon { color: #f87171; }
+  .notification-warning .notification-icon { color: #fbbf24; }
+  .notification-info .notification-icon { color: #60a5fa; }
+</style>
+
+<!-- HTML Structure -->
+<div id="notificationPopup">
+  <div id="notificationContainer" class="notification-success">
+    <div class="liquid-effect"></div>
+    <button class="notification-close" id="notificationCloseBtn">✕</button>
+    <div class="notification-icon">
+      <i id="notificationIcon" class="fas fa-check-circle"></i>
+    </div>
+    <h3 id="notificationTitle" class="notification-title">Thành công!</h3>
+    <p id="notificationMessage" class="notification-message">Thao tác đã hoàn thành!</p>
+  </div>
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+  // SIMPLE NOTIFICATION SYSTEM - GUARANTEED TO WORK
+  (function() {
+    'use strict';
+
+    // Create popup if it doesn't exist
+    function ensurePopupExists() {
+      if (!document.getElementById('notificationPopup')) {
+        const popupHTML = `
+            <div id="notificationPopup">
+                <div id="notificationContainer" class="notification-success">
+                    <div class="liquid-effect"></div>
+                    <button class="notification-close" id="notificationCloseBtn">✕</button>
+                    <div class="notification-icon">
+                        <i id="notificationIcon" class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 id="notificationTitle" class="notification-title">Thành công!</h3>
+                    <p id="notificationMessage" class="notification-message">Thao tác đã hoàn thành!</p>
+                </div>
+            </div>`;
+
+        const div = document.createElement('div');
+        div.innerHTML = popupHTML;
+        document.body.appendChild(div.firstChild);
+
+        // Add close event
+        document.getElementById('notificationCloseBtn').onclick = hideNotification;
+      }
+    }
+
+    // Show notification function
+    window.showNotification = function(options = {}) {
+      ensurePopupExists();
+
+      const popup = document.getElementById('notificationPopup');
+      const container = document.getElementById('notificationContainer');
+      const title = document.getElementById('notificationTitle');
+      const message = document.getElementById('notificationMessage');
+      const icon = document.getElementById('notificationIcon');
+
+      // Default options
+      const config = {
+        title: 'Thành công!',
+        message: 'Thao tác đã hoàn thành!',
+        type: 'success',
+        duration: 3000,
+        icon: null,
+        ...options
+      };
+
+      // Set icon based on type
+      const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle'
+      };
+
+      // Apply styles and content
+      container.className = 'notification-' + config.type;
+      icon.className = config.icon || icons[config.type] || icons.success;
+      title.textContent = config.title;
+      message.textContent = config.message;
+
+      // Show with animation
+      popup.style.display = 'flex';
+      container.style.animation = 'none';
+      setTimeout(() => {
+        container.style.animation = 'liquidDrop 0.6s ease-out';
+      }, 10);
+
+      // Auto close if duration > 0
+      if (config.duration > 0) {
+        clearTimeout(window.notificationTimer);
+        window.notificationTimer = setTimeout(hideNotification, config.duration);
+      }
+    };
+
+    // Hide notification
+    window.hideNotification = function() {
+      const popup = document.getElementById('notificationPopup');
+      if (popup) {
+        popup.style.display = 'none';
+      }
+    };
+
+    // Quick functions
+    window.showSuccess = function(message, title = 'Thành công!', duration = 3000) {
+      showNotification({ title, message, type: 'success', duration });
+      console.log("ádf")
+    };
+
+    window.showError = function(message, title = 'Lỗi!', duration = 4000) {
+      showNotification({ title, message, type: 'error', duration });
+    };
+
+    window.showWarning = function(message, title = 'Cảnh báo!', duration = 3500) {
+      showNotification({ title, message, type: 'warning', duration });
+    };
+
+    window.showInfo = function(message, title = 'Thông tin', duration = 3000) {
+      showNotification({ title, message, type: 'info', duration });
+    };
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+      ensurePopupExists();
+
+      // Close on background click
+      document.getElementById('notificationPopup').onclick = function(e) {
+        if (e.target === this) hideNotification();
+      };
+
+      // Close on ESC key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') hideNotification();
+      });
+    });
+
+    // Also initialize if already loaded
+    if (document.readyState === 'complete') {
+      ensurePopupExists();
+    }
+  })();
+</script>
+<!-- END NOTIFICATION POPUP -->
+</body>
+</html>
