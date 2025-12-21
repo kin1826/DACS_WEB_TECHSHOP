@@ -1442,7 +1442,6 @@ if (!empty($_GET['id'])) {
   });
 </script>
 
-
 <?php include 'footer.php'; ?>
 
 </body>
