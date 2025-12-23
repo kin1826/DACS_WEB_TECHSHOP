@@ -379,9 +379,17 @@ foreach ($productsArr as $product) {
         <span class="rating-count">(${p.num_buy})</span>
       </div>
 
-      <a href="product_detail.php?id=${p.id}" class="add-to-cart">
-        <i class="fas fa-eye"></i> Xem thêm
-      </a>
+      <div class="product-btn-inPro">
+        <a href="product_detail.php?id=${p.id}" class="add-to-cart">
+          <i class="fas fa-eye"></i> Xem thêm
+        </a>
+        <button class="compare_btn add-to-cart"
+                  data-id="${p.id}"
+                  data-category="${p.category_id}">
+            <i class="fa-solid fa-code-compare"></i> So sánh
+          </button>
+      </div>
+
     </div>
   </div>
   `;
@@ -653,6 +661,36 @@ foreach ($productsArr as $product) {
   document.querySelectorAll('input[name="brand[]"]').forEach(cb => {
     cb.addEventListener('change', applyFilters);
   });
+</script>
+
+<script>
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.compare_btn');
+    if (!btn) return;
+
+    const productId = parseInt(btn.dataset.id);
+    const categoryId = parseInt(btn.dataset.category);
+
+    console.log(productId, categoryId);
+
+    fetch('/apiPrivate/compare_save.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, categoryId })
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) {
+          alert(res.message);
+          return;
+        }
+
+        // tuỳ bạn: mở popup, quay lại, hay toast
+        openPopup('compare');
+        loadCompareSession();
+      });
+  });
+
 </script>
 
 </body>

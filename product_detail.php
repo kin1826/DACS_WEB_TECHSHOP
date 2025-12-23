@@ -1443,7 +1443,6 @@ if (!empty($_GET['id'])) {
   });
 </script>
 
-
 <?php include 'footer.php'; ?>
 <?php include 'notification-popup.php'; ?>
 
