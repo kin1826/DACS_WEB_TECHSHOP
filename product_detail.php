@@ -1378,7 +1378,8 @@ if (!empty($_GET['id'])) {
           const countEl = document.querySelector(".cart-count");
           if (countEl) countEl.textContent = data.count;
         } else {
-          showToast(data.msg, "error");
+          // showToast(data.msg, "error");
+          showError(data.msg)
         }
       })
       .catch(err => {
@@ -1443,6 +1444,7 @@ if (!empty($_GET['id'])) {
 </script>
 
 <?php include 'footer.php'; ?>
+<?php include 'notification-popup.php'; ?>
 
 </body>
 </html>
