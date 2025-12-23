@@ -682,12 +682,14 @@ foreach ($productsArr as $product) {
       .then(res => {
         if (!res.success) {
           alert(res.message);
+
+          openPopup('compare');
+          loadCompareSession();
           return;
         }
 
         // tuỳ bạn: mở popup, quay lại, hay toast
-        openPopup('compare');
-        loadCompareSession();
+
       });
   });
 
