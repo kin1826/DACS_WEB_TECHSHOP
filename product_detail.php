@@ -322,6 +322,13 @@ if (!empty($_GET['id'])) {
       <!-- Product Info -->
       <div class="product-info">
         <div class="product-header">
+          <button id="addToCompareBtn"
+                  data-id="<?= $product['id'] ?>"
+                  data-category="<?= $product['category_id'] ?>"
+                  class="compare_btn btn">
+            <i class="fa-solid fa-code-compare"></i>  So sánh
+          </button>
+
           <h1 class="product-title"><?php echo htmlspecialchars($product['name_pr']); ?></h1>
           <div class="product-sku">
             SKU: <span><?php echo htmlspecialchars($product['sku'] ?? 'N/A'); ?></span>
@@ -1371,7 +1378,8 @@ if (!empty($_GET['id'])) {
           const countEl = document.querySelector(".cart-count");
           if (countEl) countEl.textContent = data.count;
         } else {
-          showToast(data.msg, "error");
+          // showToast(data.msg, "error");
+          showError(data.msg)
         }
       })
       .catch(err => {
@@ -1414,7 +1422,30 @@ if (!empty($_GET['id'])) {
   });
 </script>
 
+<script>
+  document.getElementById('addToCompareBtn').addEventListener('click', () => {
+    const productId = parseInt(addToCompareBtn.dataset.id);
+    const categoryId = parseInt(addToCompareBtn.dataset.category);
+
+    fetch('/apiPrivate/compare_save.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ productId, categoryId })
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) {
+          alert(res.message);
+          return;
+        }
+        window.history.back();
+      });
+  });
+</script>
+
+
 <?php include 'footer.php'; ?>
+<?php include 'notification-popup.php'; ?>
 
 </body>
 </html>
