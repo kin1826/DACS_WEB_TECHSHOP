@@ -361,6 +361,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Khởi tạo
   updateNavButtons();
+
+
 });
 
 // Thêm hiệu ứng cho sale products
@@ -374,5 +376,48 @@ saleProducts.forEach(product => {
   product.addEventListener('mouseleave', () => {
     product.style.transform = 'translateY(-5px)';
     product.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
+  });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('newsletterModal');
+  const openBtn = document.getElementById('openRegisterNewsletter');
+  const closeBtn = document.getElementById('closeRegisterNewsletter');
+  const confirmBtn = document.getElementById('confirmRegisterNewsletter');
+
+  if (!openBtn || !modal) {
+    console.error('Newsletter elements not found');
+    return;
+  }
+
+  openBtn.addEventListener('click', () => {
+    modal.classList.add('active');
+    console.log("click opne");
+  });
+
+  closeBtn.addEventListener('click', () => {
+    modal.classList.remove('active');
+  });
+
+  confirmBtn.addEventListener('click', () => {
+    confirmBtn.disabled = true;
+    confirmBtn.innerText = 'Đang xử lý...';
+
+    fetch('/apiPrivate/register_newsletter.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'}
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) {
+          alert(res.message || 'Có lỗi xảy ra');
+          confirmBtn.disabled = false;
+          confirmBtn.innerText = 'Xác nhận đăng ký';
+          return;
+        }
+
+        modal.classList.remove('active');
+        location.reload();
+      });
   });
 });

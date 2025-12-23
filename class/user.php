@@ -155,6 +155,30 @@ class User extends DB {
     return false;
   }
 
+  public function check_register($user_id): bool
+  {
+    $user_id = (int)$user_id;
+
+    $sql = "SELECT is_register_inf
+          FROM {$this->table}
+          WHERE id = $user_id
+          LIMIT 1";
+
+    $result = $this->db_query($sql);
+    if (!$result) return false;
+
+    $row = $this->db_fetch($result);
+
+    return isset($row['is_register_inf']) && (bool)$row['is_register_inf'];
+  }
+
+  public function update_register($user_id): bool
+  {
+    $sql = "UPDATE {$this->table} SET is_register_inf = 1 WHERE id = {$user_id}";
+    return $this->db_query($sql) !== false;
+  }
+
+
   /**
    * Đăng ký/login với Google
    */

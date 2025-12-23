@@ -6,9 +6,20 @@ require_once 'class/product.php';
 require_once 'class/flash_sale_manager.php';
 require_once 'class/product_image.php';
 require_once 'class/category.php';
+require_once 'class/user.php';
 
 $flashSaleModel = new FlashSaleManager(); // Thay thế bằng tên model của bạn
 $productImg = new ProductImage();
+$userModel = new User();
+
+$isLoggedIn = isset($_SESSION['user_id'] );
+$user_id = $_SESSION['user_id'] ?? 0;
+$user_email = $_SESSION['user_email'] ?? '';
+
+$isRegistered = false;
+if ($isLoggedIn) {
+  $isRegistered = $userModel->check_register($user_id);
+}
 
 // Lấy flash sale đang diễn ra (active)
 $activeFlashSale = $flashSaleModel->getAllFlashSales('active');
@@ -391,16 +402,40 @@ foreach ($newProducts as $product) {
 </section>
 
 <!-- Newsletter -->
+<!--<section class="newsletter">-->
+<!--  <div class="container">-->
+<!--    <h2>Đăng Ký Nhận Tin</h2>-->
+<!--    <p>Nhận thông tin về sản phẩm mới, khuyến mãi đặc biệt và xu hướng thời trang mới nhất</p>-->
+<!--    <form class="newsletter-form">-->
+<!--      <button class="btn" type="submit">Đăng Ký</button>-->
+<!--    </form>-->
+<!--  </div>-->
+<!--</section>-->
+
 <section class="newsletter">
   <div class="container">
     <h2>Đăng Ký Nhận Tin</h2>
     <p>Nhận thông tin về sản phẩm mới, khuyến mãi đặc biệt và xu hướng thời trang mới nhất</p>
-    <form class="newsletter-form">
-      <input type="email" placeholder="Nhập email của bạn...">
-      <button type="submit">Đăng Ký</button>
-    </form>
+
+    <?php if (!$isLoggedIn): ?>
+      <p class="newsletter-note">
+        Vui lòng <a href="login.php">đăng nhập</a> để đăng ký nhận tin.
+      </p>
+
+    <?php elseif ($isRegistered): ?>
+      <button class="btn btn-disabled" disabled>
+        ✅ Bạn đã đăng ký nhận tin
+      </button>
+
+    <?php else: ?>
+      <button class="btn" id="openRegisterNewsletter">
+        Đăng ký ngay
+      </button>
+    <?php endif; ?>
+
   </div>
 </section>
+
 
 <!-- Customer Reviews Section -->
 <section class="customer-reviews">
@@ -629,9 +664,82 @@ foreach ($newProducts as $product) {
   </div>
 </section>
 
+
+<div class="newsletter-modal" id="newsletterModal">
+  <div class="newsletter-modal-content">
+    <h3>Xác nhận đăng ký</h3>
+
+    <p>
+      Thông tin đăng ký sẽ được gửi tới email:
+    </p>
+    <div class="newsletter-email">
+      <?= htmlspecialchars($user_email) ?>
+    </div>
+
+    <div class="newsletter-actions">
+      <button class="btn" id="confirmRegisterNewsletter">
+        Xác nhận đăng ký
+      </button>
+      <button class="btn btn-cancel" id="closeRegisterNewsletter">
+        Hủy
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+
+
+<script src="js/indexJS.js"></script>
 <!-- Footer -->
 <?php include 'footer.php'?>
 
-<script src="js/indexJS.js"></script>
+
+<script>
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('newsletterModal');
+    const openBtn = document.getElementById('openRegisterNewsletter');
+    const closeBtn = document.getElementById('closeRegisterNewsletter');
+    const confirmBtn = document.getElementById('confirmRegisterNewsletter');
+
+    if (!openBtn || !modal) {
+      console.error('Newsletter elements not found');
+      return;
+    }
+
+    openBtn.addEventListener('click', () => {
+      modal.classList.add('active');
+      console.log("click opne");
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      confirmBtn.disabled = true;
+      confirmBtn.innerText = 'Đang xử lý...';
+
+      fetch('/apiPrivate/register_newsletter.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+      })
+        .then(res => res.json())
+        .then(res => {
+          if (!res.success) {
+            alert(res.message || 'Có lỗi xảy ra');
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = 'Xác nhận đăng ký';
+            return;
+          }
+
+          modal.classList.remove('active');
+          location.reload();
+        });
+    });
+  });
+
+</script>
 
 </html>
