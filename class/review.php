@@ -48,6 +48,29 @@ class Reviews extends DB {
     return $this->db_fetch_all($result);
   }
 
+  public function getThree($LIMIT = 3): array
+  {
+    $sql = "SELECT
+                pr.*,
+                u.username,
+                u.avatar,
+                u.email,
+                pr.created_at as review_date
+            FROM product_reviews pr
+            LEFT JOIN users u ON pr.user_id = u.id
+            WHERE pr.rating IS NOT NULL
+            AND pr.comment IS NOT NULL
+            AND pr.comment != ''
+            ORDER BY pr.created_at DESC
+            LIMIT {$LIMIT}";
+
+    $result = $this->db_query($sql);
+
+    if (!$result) return [];
+
+    return $this->db_fetch_all($result);
+  }
+
   /**
    * Lấy đánh giá theo danh sách sản phẩm
    * @param int $user_id
