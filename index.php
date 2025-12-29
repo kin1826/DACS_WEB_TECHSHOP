@@ -7,10 +7,12 @@ require_once 'class/flash_sale_manager.php';
 require_once 'class/product_image.php';
 require_once 'class/category.php';
 require_once 'class/user.php';
+require_once 'class/review.php';
 
 $flashSaleModel = new FlashSaleManager(); // Thay thế bằng tên model của bạn
 $productImg = new ProductImage();
 $userModel = new User();
+$reviewModel = new Reviews();
 
 $isLoggedIn = isset($_SESSION['user_id'] );
 $user_id = $_SESSION['user_id'] ?? 0;
@@ -29,6 +31,8 @@ $currentFlashSale = null;
 $saleProducts = [];
 $hasFlashSale = false;
 $upcomingFlashSales = [];
+
+$reviewListThree = $reviewModel->getThree(3);
 
 // Kiểm tra và lấy dữ liệu
 if (!empty($activeFlashSale)) {
@@ -444,67 +448,55 @@ foreach ($newProducts as $product) {
       <h2>Đánh Giá Từ Khách Hàng</h2>
     </div>
     <div class="reviews-container">
-      <div class="review-card">
-        <div class="review-header">
-          <div class="review-avatar">
-            <img src="https://media.baoquangninh.vn/dataimages/202006/original/images1398180_viet2.jpg" alt="Customer Avatar">
-          </div>
-          <div class="review-info">
-            <h4>Nguyễn Thị Minh</h4>
-            <div class="stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
+      <?php if (!empty($reviewListThree)): ?>
+        <?php foreach ($reviewListThree as $review): ?>
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">
+                <img src="<?php echo htmlspecialchars($review['avatar'] ?? 'https://via.placeholder.com/60'); ?>" alt="Customer Avatar">
+              </div>
+              <div class="review-info">
+                <h4><?php echo htmlspecialchars($review['username']); ?></h4>
+                <div class="stars">
+                  <?php
+                  $rating = $review['rating'] ?? 5;
+                  $fullStars = floor($rating);
+                  $hasHalfStar = ($rating - $fullStars) >= 0.5;
+                  $emptyStars = 5 - $fullStars - ($hasHalfStar ? 1 : 0);
+
+                  // Hiển thị ngôi sao đầy
+                  for ($i = 0; $i < $fullStars; $i++): ?>
+                    <i class="fas fa-star"></i>
+                  <?php endfor; ?>
+
+                  <?php if ($hasHalfStar): ?>
+                    <i class="fas fa-star-half-alt"></i>
+                  <?php endif; ?>
+
+                  <?php for ($i = 0; $i < $emptyStars; $i++): ?>
+                    <i class="far fa-star"></i>
+                  <?php endfor; ?>
+                </div>
+              </div>
+            </div>
+            <div class="review-content">
+              "<?php echo htmlspecialchars($review['comment']); ?>"
+            </div>
+            <div class="review-meta" style="margin-top: 10px; font-size: 12px; color: #888;">
+              <?php
+              // Hiển thị ngày đánh giá
+              if (isset($review['created_at'])) {
+                echo date('d/m/Y', strtotime($review['created_at']));
+              }
+              ?>
             </div>
           </div>
-        </div>
-        <div class="review-content">
-          "Chiếc điện thoại này thực sự vượt xa kỳ vọng với hiệu năng xử lý cực kỳ mượt mà ngay cả khi chơi các game đồ họa nặng, cùng với thời lượng pin ấn tượng giúp tôi thoải mái sử dụng trọn vẹn một ngày làm việc. Hệ thống camera kép cũng cho ra những bức ảnh sắc nét và màu sắc trung thực đáng ngạc nhiên."
-        </div>
-      </div>
-      <div class="review-card">
-        <div class="review-header">
-          <div class="review-avatar">
-            <img src="https://jbagy.me/wp-content/uploads/2025/03/Hinh-anh-avatar-anime-nu-cute-2.jpg" alt="Customer Avatar">
-          </div>
-          <div class="review-info">
-            <h4>Trần Văn Hùng</h4>
-            <div class="stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star-half-alt"></i>
-              <i class="fa-regular fa-star"></i>
-            </div>
-          </div>
-        </div>
-        <div class="review-content">
-          "Tôi hơi thất vọng về chất liệu của chiếc đồng hồ thông minh này, dây đeo có vẻ kém bền so với mức giá cao cấp, tuy nhiên, các tính năng theo dõi sức khỏe và GPS lại hoạt động cực kỳ chính xác và là công cụ hỗ trợ tập luyện không thể thiếu của tôi."
-        </div>
-      </div>
-      <div class="review-card">
-        <div class="review-header">
-          <div class="review-avatar">
-            <img src="https://png.pngtree.com/thumb_back/fh260/background/20221021/pngtree-happy-asian-woman-cooking-in-the-kitchen-housewife-food-vietnamese-photo-image_39055990.jpg" alt="Customer Avatar">
-          </div>
-          <div class="review-info">
-            <h4>Lê Thị Hương</h4>
-            <div class="stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-            </div>
-          </div>
-        </div>
-        <div class="review-content">
-          "Loa Bluetooth này có thiết kế nhỏ gọn và đẹp mắt, rất tiện mang theo, nhưng âm bass lại hơi yếu và bị rè nhẹ khi mở âm lượng tối đa. Tuy nhiên, ở mức âm lượng vừa phải, chất âm vẫn trong trẻo, phù hợp để nghe nhạc nền trong phòng làm việc."
-        </div>
-      </div>
-    </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p style="grid-column: 1/-1; text-align: center; color: #666;">
+          Chưa có đánh giá nào.
+        </p>
+      <?php endif; ?>
   </div>
 </section>
 
