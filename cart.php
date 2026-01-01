@@ -522,7 +522,11 @@ if ($user_id) {
       // Handle remove item
       if (removeBtn) {
         const itemId = Number(removeBtn.dataset.id);
-        removeItem(itemId);
+
+        if (confirm("Bạn có chắc muốn xóa sản phẩm này?")) {
+          removeItem(itemId);
+        }
+
         return;
       }
 
@@ -593,23 +597,23 @@ if ($user_id) {
     });
 
     // Remove item
-    function removeItem(itemId) {
-      if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
-
-      // Find item element for animation
-      const itemElement = document.querySelector(`.cart-item[data-id="${itemId}"]`);
-      if (itemElement) {
-        // Add remove animation (optional)
-        itemElement.classList.add('removing');
-        setTimeout(() => {
-          cartItems = cartItems.filter(item => Number(item.id) !== Number(itemId));
-          initCart();
-        }, 300);
-      } else {
-        cartItems = cartItems.filter(item => Number(item.id) !== Number(itemId));
-        initCart();
-      }
-    }
+    // function removeItem(itemId) {
+    //   if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
+    //
+    //   // Find item element for animation
+    //   const itemElement = document.querySelector(`.cart-item[data-id="${itemId}"]`);
+    //   if (itemElement) {
+    //     // Add remove animation (optional)
+    //     itemElement.classList.add('removing');
+    //     setTimeout(() => {
+    //       cartItems = cartItems.filter(item => Number(item.id) !== Number(itemId));
+    //       initCart();
+    //     }, 300);
+    //   } else {
+    //     cartItems = cartItems.filter(item => Number(item.id) !== Number(itemId));
+    //     initCart();
+    //   }
+    // }
 
     // Apply coupon
     function applyCoupon(code, discountValue) {
@@ -647,33 +651,106 @@ if ($user_id) {
         }
 
         // In a real application, this would redirect to checkout page
-        alert('Chuyển hướng đến trang thanh toán...');
+        alert('Thanh toán ngay...');
         // window.location.href = 'checkout.php';
       });
     }
 
     // Initialize cart
     initCart();
+
+    function syncQuantityToServer(productId, quantity) {
+      fetch("update_quantity.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          action: "update",
+          product_id: productId,
+          quantity: quantity
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            console.error("Update error:", data.message);
+          } else {
+            console.log(`Updated ${productId} → ${quantity}`);
+          }
+        })
+        .catch(err => console.error("Server error:", err));
+    }
+
+    function removeItem(productId) {
+      fetch("update_quantity.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          action: "delete",
+          product_id: productId
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            console.error("Delete error:", data.message);
+          } else {
+            console.log(`Deleted ${productId}`);
+            // 1️⃣ Xóa khỏi state
+            cartItems = cartItems.filter(item => Number(item.id) !== Number(productId));
+
+            // 2️⃣ Xóa DOM (có animation)
+            const itemElement = document.querySelector(
+              `.cart-item[data-id="${productId}"]`
+            );
+
+            if (itemElement) {
+              itemElement.classList.add('removing'); // optional animation
+              setTimeout(() => {
+                itemElement.remove();
+              }, 300);
+            }
+
+            // 3️⃣ Update summary + count + empty state
+            updateCartSummary();
+
+            const itemsCountEl = document.getElementById('itemsCount');
+            if (itemsCountEl) {
+              itemsCountEl.textContent = `${getTotalItems()} sản phẩm`;
+            }
+
+            toggleEmptyState();
+
+            // remove DOM, reload cart, ...
+          }
+        })
+        .catch(err => console.error("Server error:", err));
+    }
   });
 
-  function syncQuantityToServer(productId, quantity) {
-    fetch("update_quantity.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: `product_id=${productId}&quantity=${quantity}`
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) {
-          console.error("Update error:", data.message);
-        } else {
-          console.log(`ok${productId}, ${quantity}`)
-        }
-      })
-      .catch(err => console.error("Server error:", err));
-  }
+  // function syncQuantityToServer(productId, quantity) {
+  //   fetch("update_quantity.php", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/x-www-form-urlencoded",
+  //     },
+  //     body: `product_id=${productId}&quantity=${quantity}`
+  //   })
+  //     .then(res => res.json())
+  //     .then(data => {
+  //       if (!data.success) {
+  //         console.error("Update error:", data.message);
+  //       } else {
+  //         console.log(`ok${productId}, ${quantity}`)
+  //       }
+  //     })
+  //     .catch(err => console.error("Server error:", err));
+  // }
+
+
 
 </script>
 
