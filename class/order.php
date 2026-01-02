@@ -262,6 +262,60 @@ class OrderModel extends DB {
   /**
    * Đếm tổng số đơn hàng (cho phân trang admin)
    */
+
+  /**
+   * @param 'today'|'week'|'month'|'precious' $type
+   * @return int
+   */
+  public function countOrderNum(string $type): int
+  {
+    switch ($type) {
+
+      case 'today':
+        $sql = "
+                SELECT COUNT(*) AS total
+                FROM {$this->table}
+                WHERE DATE(created_at) = CURDATE()
+            ";
+        break;
+
+      case 'week':
+        $sql = "
+                SELECT COUNT(*) AS total
+                FROM {$this->table}
+                WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+            ";
+        break;
+
+      case 'month':
+        $sql = "
+                SELECT COUNT(*) AS total
+                FROM {$this->table}
+                WHERE YEAR(created_at) = YEAR(CURDATE())
+                  AND MONTH(created_at) = MONTH(CURDATE())
+            ";
+        break;
+
+      case 'precious': // quý hiện tại
+        $sql = "
+                SELECT COUNT(*) AS total
+                FROM {$this->table}
+                WHERE YEAR(created_at) = YEAR(CURDATE())
+                  AND QUARTER(created_at) = QUARTER(CURDATE())
+            ";
+        break;
+
+      default:
+        return 0;
+    }
+
+    $result = $this->db_fetch($this->db_query($sql));
+    return (int) ($result['total'] ?? 0);
+  }
+
+
+
+
   public function countOrdersAdmin($search = '', $status = '', $payment_status = '') {
     $sql = "SELECT COUNT(*) as total FROM {$this->table} o
                 LEFT JOIN users u ON o.user_id = u.id
@@ -550,16 +604,48 @@ class OrderModel extends DB {
     $month = $month ?? date('m');
 
     $sql = "SELECT
-                SUM(total_amount) as revenue,
+                COALESCE(SUM(total_amount), 0) AS revenue,
                 COUNT(*) as order_count
                 FROM {$this->table}
-                WHERE order_status = 'delivered'
+                WHERE order_status = 'delivered' AND payment_status = 'paid'
                 AND YEAR(created_at) = {$year}
                 AND MONTH(created_at) = {$month}";
 
     $result = $this->db_query($sql);
     return $this->db_fetch($result);
   }
+
+  /**
+   * Lấy doanh thu theo 1 năm
+   */
+  public function getRevenueByYear($year = null)
+  {
+    $year = (int) ($year ?? date('Y'));
+
+    $sql = "
+        SELECT
+            MONTH(created_at) AS month,
+            COALESCE(SUM(total_amount), 0) AS revenue
+        FROM {$this->table}
+        WHERE order_status = 'delivered'
+          AND payment_status = 'paid'
+          AND YEAR(created_at) = {$year}
+        GROUP BY MONTH(created_at)
+        ORDER BY month
+    ";
+
+    $rows = $this->db_fetch_all($this->db_query($sql));
+
+    // Chuẩn hóa đủ 12 tháng
+    $result = array_fill(1, 12, 0);
+
+    foreach ($rows as $row) {
+      $result[(int)$row['month']] = (float)$row['revenue'];
+    }
+
+    return $result;
+  }
+
 
   /**
    * Lấy đơn hàng mới nhất (cho dashboard)
