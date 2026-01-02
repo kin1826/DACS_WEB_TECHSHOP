@@ -691,3 +691,9 @@
     text-align: center;
   }
 }
+
+.cart-item.removing {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.3s ease;
+}

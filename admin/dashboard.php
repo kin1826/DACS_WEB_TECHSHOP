@@ -2,12 +2,26 @@
 // Thống kê tổng quan
 require_once 'class/product.php';
 require_once 'class/user.php';
+require_once 'class/order.php';
 
 $product = new Product();
 $totalPro = $product->getTotalProducts();
 
 global $userModel;
 $totalUsers = $userModel->count();
+
+$orderModel = new OrderModel();
+$orderToday = $orderModel->countOrderNum("today");
+$orderMonth = $orderModel->getMonthlyRevenue();
+$orderYear = $orderModel->getRevenueByYear();
+
+$chartData = [
+  'labels' => array_map(fn($m) => 'T'.$m, range(1, 12)),
+  'data'   => array_map(
+    fn($v) => round($v / 1_000_000, 2), // đổi sang triệu
+    array_values($orderYear)
+  )
+];
 
 //$order = new Order();
 //$todayOrders = $order->getTodayOrders();
@@ -24,351 +38,7 @@ $totalUsers = $userModel->count();
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* Reset và Base */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
 
-    body {
-      background: #f3f4f6;
-      color: #1f2937;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    /* Header */
-    .dashboard-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid #e5e7eb;
-    }
-
-    .dashboard-title h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #1f2937;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .dashboard-actions {
-      display: flex;
-      gap: 15px;
-    }
-
-    .export-btn, .refresh-btn {
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s;
-      border: none;
-    }
-
-    .export-btn {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-    }
-
-    .export-btn:hover {
-      background: linear-gradient(135deg, #059669, #047857);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
-    .refresh-btn {
-      background: #3b82f6;
-      color: white;
-    }
-
-    .refresh-btn:hover {
-      background: #2563eb;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 25px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: white;
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      border: 1px solid #eef2f7;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-      border-color: #dbeafe;
-    }
-
-    .stat-card h3 {
-      margin: 0 0 15px 0;
-      font-size: 15px;
-      font-weight: 600;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .stat-card .number {
-      font-size: 36px;
-      font-weight: 800;
-      color: #1f2937;
-      line-height: 1;
-      margin-bottom: 10px;
-    }
-
-    .stat-card .trend {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .trend-up { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .trend-down { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-    /* Charts Grid */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 30px;
-      margin-bottom: 30px;
-    }
-
-    @media (max-width: 1024px) {
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .chart-container {
-      background: white;
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      border: 1px solid #eef2f7;
-    }
-
-    .chart-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .chart-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1f2937;
-    }
-
-    .chart-controls {
-      display: flex;
-      gap: 10px;
-    }
-
-    .time-filter {
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      background: white;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .chart-wrapper {
-      position: relative;
-      height: 300px;
-    }
-
-    /* Tables Grid */
-    .tables-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 30px;
-      margin-bottom: 30px;
-    }
-
-    @media (max-width: 1024px) {
-      .tables-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .table-container {
-      background: white;
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      border: 1px solid #eef2f7;
-    }
-
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .table-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1f2937;
-    }
-
-    .view-all {
-      color: #3b82f6;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 14px;
-    }
-
-    .view-all:hover {
-      text-decoration: underline;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      text-align: left;
-      padding: 12px 16px;
-      background: #f9fafb;
-      color: #6b7280;
-      font-weight: 600;
-      font-size: 14px;
-      border-bottom: 2px solid #e5e7eb;
-    }
-
-    td {
-      padding: 12px 16px;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 14px;
-    }
-
-    tr:hover {
-      background: #f9fafb;
-    }
-
-    .status {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-block;
-    }
-
-    .status-completed { background: #d1fae5; color: #065f46; }
-    .status-pending { background: #fef3c7; color: #92400e; }
-    .status-cancelled { background: #fee2e2; color: #991b1b; }
-
-    /* Recent Activity */
-    .activity-container {
-      background: white;
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      border: 1px solid #eef2f7;
-      margin-bottom: 30px;
-    }
-
-    .activity-list {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .activity-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 15px;
-      padding: 15px;
-      border-radius: 12px;
-      transition: background 0.3s;
-    }
-
-    .activity-item:hover {
-      background: #f9fafb;
-    }
-
-    .activity-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      flex-shrink: 0;
-    }
-
-    .icon-user { background: #8b5cf6; }
-    .icon-order { background: #10b981; }
-    .icon-product { background: #f59e0b; }
-    .icon-payment { background: #3b82f6; }
-
-    .activity-content {
-      flex-grow: 1;
-    }
-
-    .activity-title {
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 4px;
-    }
-
-    .activity-time {
-      font-size: 12px;
-      color: #9ca3af;
-    }
-
-    .activity-amount {
-      font-weight: 600;
-      color: #10b981;
-    }
-
-    /* Footer */
-    .dashboard-footer {
-      text-align: center;
-      padding: 20px;
-      color: #6b7280;
-      font-size: 14px;
-      border-top: 1px solid #e5e7eb;
-      margin-top: 30px;
-    }
-  </style>
 </head>
 <body>
 <div class="container">
@@ -394,30 +64,30 @@ $totalUsers = $userModel->count();
       <h3>Tổng số Users</h3>
       <div class="number"><?php echo $totalUsers; ?></div>
       <div class="trend trend-up">
-        <i class="fas fa-arrow-up"></i> 12%
+<!--        <i class="fas fa-arrow-up"></i> 12%-->
       </div>
     </div>
     <div class="stat-card">
       <h3>Tổng sản phẩm</h3>
       <div class="number"><?php echo $totalPro; ?></div>
       <div class="trend trend-up">
-        <i class="fas fa-arrow-up"></i> 5%
+<!--        <i class="fas fa-arrow-up"></i> 5%-->
       </div>
     </div>
     <div class="stat-card">
       <h3>Đơn hàng hôm nay</h3>
-      <div class="number">21<?php   ?></div>
+      <div class="number"><?php echo $orderToday?></div>
       <div class="trend trend-up">
-        <i class="fas fa-arrow-up"></i> 8%
+<!--        <i class="fas fa-arrow-up"></i> 8%-->
       </div>
     </div>
     <div class="stat-card">
       <h3>Doanh thu tháng</h3>
 <!--      <div class="number">--><?php //echo number_format($monthlyRevenue, 0, ',', '.'); ?><!--đ</div>-->
-      <div class="number"><?php echo number_format(36432000, 0, ',', '.'); ?>đ</div>
+      <div class="number"><?php echo number_format($orderMonth['revenue'], 0, ',', '.'); ?>đ</div>
 
       <div class="trend trend-up">
-        <i class="fas fa-arrow-up"></i> 15%
+<!--        <i class="fas fa-arrow-up"></i> 15%-->
       </div>
     </div>
   </div>
@@ -429,11 +99,11 @@ $totalUsers = $userModel->count();
       <div class="chart-header">
         <h3 class="chart-title">Doanh thu theo tháng</h3>
         <div class="chart-controls">
-          <select class="time-filter" onchange="updateRevenueChart(this.value)">
-            <option value="6">6 tháng</option>
-            <option value="12" selected>12 tháng</option>
-            <option value="24">24 tháng</option>
-          </select>
+<!--          <select class="time-filter" onchange="updateRevenueChart(this.value)">-->
+<!--            <option value="6">6 tháng</option>-->
+<!--            <option value="12" selected>12 tháng</option>-->
+<!--            <option value="24">24 tháng</option>-->
+<!--          </select>-->
         </div>
       </div>
       <div class="chart-wrapper">
@@ -536,13 +206,17 @@ $totalUsers = $userModel->count();
 
 <script>
   // Dữ liệu mẫu cho Dashboard
+  const revenueChartData = <?= json_encode($chartData, JSON_UNESCAPED_UNICODE) ?>;
+
+  console.log(revenueChartData);
+
   const dashboardData = {
     // Doanh thu 12 tháng gần đây
     revenueData: {
-      labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+      labels: revenueChartData.labels,
       datasets: [{
         label: 'Doanh thu (triệu đồng)',
-        data: [0, 0, 0, 0, 0, 15, 34, 82, 78, 45, 55, 76],
+        data: revenueChartData.data,
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         borderWidth: 3,
@@ -569,29 +243,16 @@ $totalUsers = $userModel->count();
 
     // Top sản phẩm
     topProducts: [
-      { name: 'iPhone 15 Pro Max', revenue: 125000000, sold: 45 },
-      { name: 'MacBook Pro M2', revenue: 98000000, sold: 32 },
-      { name: 'AirPods Pro 2', revenue: 65000000, sold: 89 },
-      { name: 'Apple Watch Series 9', revenue: 45000000, sold: 56 },
-      { name: 'iPad Air 5', revenue: 38000000, sold: 42 }
+
     ],
 
     // Đơn hàng gần đây
     recentOrders: [
-      { id: 'ORD-00123', customer: 'Nguyễn Văn A', amount: 12500000, status: 'completed' },
-      { id: 'ORD-00122', customer: 'Trần Thị B', amount: 8500000, status: 'pending' },
-      { id: 'ORD-00121', customer: 'Lê Văn C', amount: 15600000, status: 'completed' },
-      { id: 'ORD-00120', customer: 'Phạm Thị D', amount: 7300000, status: 'processing' },
-      { id: 'ORD-00119', customer: 'Hoàng Văn E', amount: 9200000, status: 'cancelled' }
+
     ],
 
     // Hoạt động gần đây
     recentActivities: [
-      { type: 'user', title: 'Người dùng mới đăng ký', user: 'Nguyễn Thị F', time: '10 phút trước' },
-      { type: 'order', title: 'Đơn hàng mới', orderId: 'ORD-00124', amount: 12500000, time: '25 phút trước' },
-      { type: 'product', title: 'Sản phẩm mới được thêm', product: 'Samsung Galaxy S24', time: '1 giờ trước' },
-      { type: 'payment', title: 'Thanh toán thành công', amount: 8500000, time: '2 giờ trước' },
-      { type: 'user', title: 'Người dùng cập nhật thông tin', user: 'Trần Văn G', time: '3 giờ trước' }
     ]
   };
 
@@ -869,5 +530,351 @@ $totalUsers = $userModel->count();
     return statusMap[status] || status;
   }
 </script>
+
+<style>
+  /* Reset và Base */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background: #f3f4f6;
+    color: #1f2937;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .dashboard-title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dashboard-actions {
+    display: flex;
+    gap: 15px;
+  }
+
+  .export-btn, .refresh-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    border: none;
+  }
+
+  .export-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+  }
+
+  .export-btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .refresh-btn {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .refresh-btn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eef2f7;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    border-color: #dbeafe;
+  }
+
+  .stat-card h3 {
+    margin: 0 0 15px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-card .number {
+    font-size: 36px;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+
+  .stat-card .trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .trend-up { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+  .trend-down { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+  /* Charts Grid */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+
+  @media (max-width: 1024px) {
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .chart-container {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eef2f7;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .chart-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .chart-controls {
+    display: flex;
+    gap: 10px;
+  }
+
+  .time-filter {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .chart-wrapper {
+    position: relative;
+    height: 300px;
+  }
+
+  /* Tables Grid */
+  .tables-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+
+  @media (max-width: 1024px) {
+    .tables-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .table-container {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eef2f7;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .table-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .view-all {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .view-all:hover {
+    text-decoration: underline;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 14px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+  }
+
+  tr:hover {
+    background: #f9fafb;
+  }
+
+  .status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .status-completed { background: #d1fae5; color: #065f46; }
+  .status-pending { background: #fef3c7; color: #92400e; }
+  .status-cancelled { background: #fee2e2; color: #991b1b; }
+
+  /* Recent Activity */
+  .activity-container {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eef2f7;
+    margin-bottom: 30px;
+  }
+
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    transition: background 0.3s;
+  }
+
+  .activity-item:hover {
+    background: #f9fafb;
+  }
+
+  .activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .icon-user { background: #8b5cf6; }
+  .icon-order { background: #10b981; }
+  .icon-product { background: #f59e0b; }
+  .icon-payment { background: #3b82f6; }
+
+  .activity-content {
+    flex-grow: 1;
+  }
+
+  .activity-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+  }
+
+  .activity-time {
+    font-size: 12px;
+    color: #9ca3af;
+  }
+
+  .activity-amount {
+    font-weight: 600;
+    color: #10b981;
+  }
+
+  /* Footer */
+  .dashboard-footer {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280;
+    font-size: 14px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 30px;
+  }
+</style>
 </body>
 </html>

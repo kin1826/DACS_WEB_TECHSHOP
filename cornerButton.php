@@ -2,8 +2,11 @@
 <div class="corner-container">
   <!-- Nút chính ở góc -->
   <button class="corner-main-btn" id="cornerMainBtn">
-    <i class="fa-solid fa-arrow-up"></i>
+    <i class="fa-brands fa-dropbox"></i>
   </button>
+<!--  <button class="corner-main-btn" id="goTopBtn" style="margin-top: 10px;">-->
+<!--    <i class="fa-solid fa-arrow-up"></i>-->
+<!--  </button>-->
 
   <!-- Menu chức năng -->
   <div class="corner-menu" id="cornerMenu">
