@@ -477,9 +477,9 @@ class Product extends DB {
               LEFT JOIN categories c ON p.category_id = c.id
               LEFT JOIN brands b ON p.brand_id = b.id
               LEFT JOIN order_items oi ON p.id = oi.product_id
-              WHERE p.status = 'published'
+              WHERE p.status = 'published' AND p.num_buy > 0
               GROUP BY p.id
-              ORDER BY total_sold DESC
+              ORDER BY p.num_buy DESC
               LIMIT $limit";
     $result = $this->db_query($query);
     return $this->db_fetch_all($result);

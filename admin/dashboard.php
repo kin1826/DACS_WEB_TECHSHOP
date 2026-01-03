@@ -6,6 +6,22 @@ require_once 'class/order.php';
 
 $product = new Product();
 $totalPro = $product->getTotalProducts();
+$bestSeller = $product->getBestSellers();
+
+$a = $bestSeller['0'];
+print_r($a['name_pr']);
+
+$topProducts = [];
+
+foreach ($bestSeller as $item) {
+  $topProducts[] = [
+    'name'    => $item['name_pr'],
+    'sold'    => (int)$item['num_buy'],
+    'revenue' => (int)$item['sale_price'] * (int)$item['num_buy']
+  ];
+}
+
+print_r($topProducts);
 
 global $userModel;
 $totalUsers = $userModel->count();
@@ -22,6 +38,20 @@ $chartData = [
     array_values($orderYear)
   )
 ];
+
+function setDataToChartData($year)
+{
+  global $orderModel, $chartData;
+  $orderYear = $orderModel->getRevenueByYear();
+
+  $chartData = [
+    'labels' => array_map(fn($m) => 'T'.$m, range(1, 12)),
+    'data'   => array_map(
+      fn($v) => round($v / 1_000_000, 2), // đổi sang triệu
+      array_values($orderYear)
+    )
+  ];
+}
 
 //$order = new Order();
 //$todayOrders = $order->getTodayOrders();
@@ -97,13 +127,15 @@ $chartData = [
     <!-- Biểu đồ doanh thu -->
     <div class="chart-container">
       <div class="chart-header">
-        <h3 class="chart-title">Doanh thu theo tháng</h3>
+        <h3 class="chart-title">Doanh thu theo năm</h3>
         <div class="chart-controls">
-<!--          <select class="time-filter" onchange="updateRevenueChart(this.value)">-->
-<!--            <option value="6">6 tháng</option>-->
-<!--            <option value="12" selected>12 tháng</option>-->
-<!--            <option value="24">24 tháng</option>-->
-<!--          </select>-->
+          <label>
+            <select class="time-filter" onchange="updateRevenueChart(this.value)">
+              <option value="<?php echo date('Y'); ?>" selected><?php echo date('Y'); ?></option>
+              <option value="<?php echo date('Y') - 1; ?>"><?php echo date('Y') - 1; ?></option>
+              <option value="<?php echo date('Y') - 2; ?>"><?php echo date('Y') - 2; ?></option>
+            </select>
+          </label>
         </div>
       </div>
       <div class="chart-wrapper">
@@ -206,9 +238,20 @@ $chartData = [
 
 <script>
   // Dữ liệu mẫu cho Dashboard
+  //const revenueChartData = <?php //= json_encode($chartData, JSON_UNESCAPED_UNICODE) ?>//;
   const revenueChartData = <?= json_encode($chartData, JSON_UNESCAPED_UNICODE) ?>;
 
   console.log(revenueChartData);
+
+  function loadOrdersChart(period) {
+    fetch(`apiPrivate/dashboardAPI.php?type=orders&period=${period}`)
+      .then(res => res.json())
+      .then(res => {
+        ordersChart.data.labels = res.labels;
+        ordersChart.data.datasets[0].data = res.data;
+        ordersChart.update();
+      });
+  }
 
   const dashboardData = {
     // Doanh thu 12 tháng gần đây
@@ -227,9 +270,9 @@ $chartData = [
 
     // Đơn hàng theo trạng thái
     ordersData: {
-      labels: ['Hoàn thành', 'Đang xử lý', 'Chờ thanh toán', 'Đã hủy'],
+      labels: [],
       datasets: [{
-        data: [45, 25, 20, 10],
+        data: [],
         backgroundColor: [
           '#10b981',
           '#3b82f6',
@@ -242,9 +285,7 @@ $chartData = [
     },
 
     // Top sản phẩm
-    topProducts: [
-
-    ],
+    topProducts: <?= json_encode($topProducts, JSON_UNESCAPED_UNICODE) ?>,
 
     // Đơn hàng gần đây
     recentOrders: [
@@ -255,6 +296,8 @@ $chartData = [
     recentActivities: [
     ]
   };
+
+  console.log(dashboardData.topProducts);
 
   // Biểu đồ doanh thu
   let revenueChart;
@@ -278,6 +321,8 @@ $chartData = [
 
     // Hiển thị hoạt động gần đây
     populateActivities();
+
+    loadOrdersChart("month")
   });
 
   // Cập nhật thời gian hiện tại
@@ -353,10 +398,19 @@ $chartData = [
   }
 
   // Cập nhật biểu đồ doanh thu
-  function updateRevenueChart(months) {
+  function updateRevenueChart(year) {
     // Trong thực tế, bạn sẽ gọi API để lấy dữ liệu
-    console.log('Cập nhật biểu đồ doanh thu cho', months, 'tháng');
-    // Tạm thời chỉ log, có thể thêm logic tải dữ liệu mới
+    console.log('Cập nhật biểu đồ doanh thu cho', year, 'tháng');
+
+    fetch(`../apiPrivate/dashboardAPI.php?type=revenue&year=${year}`)
+      .then(res => res.json())
+      .then(res => {
+        revenueChart.data.labels = res.labels;
+        revenueChart.data.datasets[0].data = res.data;
+        revenueChart.update();
+
+        console.log(res);
+      });
   }
 
   // Cập nhật biểu đồ đơn hàng

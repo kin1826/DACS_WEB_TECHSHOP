@@ -457,6 +457,18 @@ class OrderModel extends DB {
     return $this->db_update($this->table, $data, "id = {$order_id}");
   }
 
+  public function insertToProduct($product_id) {
+    // Lấy rate + num_buy hiện tại
+    $product = $this->db_fetch(
+      $this->db_query("SELECT rate, num_buy FROM products WHERE id = $product_id")
+    );
+
+    // Update product
+    $this->db_update('products', [
+      'num_buy' => $product['num_buy'] + 1
+    ], "id = $product_id");
+  }
+
   /**
    * Cập nhật thông tin đơn hàng
    */
@@ -614,6 +626,42 @@ class OrderModel extends DB {
     $result = $this->db_query($sql);
     return $this->db_fetch($result);
   }
+
+  /**
+   * Lấy thống kê theo TG
+   */
+  public function getOrderStatusStats($period = 'month')
+  {
+    // Điều kiện thời gian
+    $timeWhere = '';
+    switch ($period) {
+      case 'week':
+        $timeWhere = "AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+        break;
+
+      case 'month':
+        $timeWhere = "AND YEAR(created_at)=YEAR(CURDATE())
+                          AND MONTH(created_at)=MONTH(CURDATE())";
+        break;
+
+      case 'year':
+        $timeWhere = "AND YEAR(created_at)=YEAR(CURDATE())";
+        break;
+    }
+
+    $sql = "
+        SELECT
+            SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) AS completed,
+            SUM(CASE WHEN order_status IN ('pending','processing','shipped') THEN 1 ELSE 0 END) AS processing,
+            SUM(CASE WHEN payment_status = 'pending' THEN 1 ELSE 0 END) AS unpaid,
+            SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled
+        FROM {$this->table}
+        WHERE 1=1 {$timeWhere}
+    ";
+
+    return $this->db_fetch($this->db_query($sql));
+  }
+
 
   /**
    * Lấy doanh thu theo 1 năm
