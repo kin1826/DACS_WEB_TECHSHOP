@@ -683,11 +683,11 @@ foreach ($productsArr as $product) {
         if (!res.success) {
           alert(res.message);
 
-          openPopup('compare');
-          loadCompareSession();
+
           return;
         }
-
+        openPopup('compare');
+        loadCompareSession();
         // tuỳ bạn: mở popup, quay lại, hay toast
 
       });
