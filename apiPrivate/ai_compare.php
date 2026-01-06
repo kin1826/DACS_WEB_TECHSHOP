@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
+// ================== INPUT ==================
 $input = json_decode(file_get_contents('php://input'), true);
 $prompt = $input['prompt'] ?? '';
 
@@ -9,17 +10,41 @@ if (!$prompt) {
   exit;
 }
 
-$apiKey = 'OPENAI_API_KEY_CUA_BAN';
+// ================== API KEY ==================
+$apiKey = getenv('OPENAI_API_KEY');
+if (!$apiKey) {
+  echo json_encode(['error' => 'Missing OPENAI_API_KEY']);
+  exit;
+}
 
+// ================== PAYLOAD ==================
 $data = [
   'model' => 'gpt-4.1-mini',
-  'messages' => [
-    ['role' => 'system', 'content' => 'Bạn là trợ lý so sánh sản phẩm.'],
-    ['role' => 'user', 'content' => $prompt]
+  'input' => [
+    [
+      'role' => 'system',
+      'content' => [
+        [
+          'type' => 'input_text',
+          'text' => 'Bạn là trợ lý so sánh sản phẩm.'
+        ]
+      ]
+    ],
+    [
+      'role' => 'user',
+      'content' => [
+        [
+          'type' => 'input_text',
+          'text' => $prompt
+        ]
+      ]
+    ]
   ]
 ];
 
-$ch = curl_init('https://api.openai.com/v1/chat/completions');
+
+// ================== CURL ==================
+$ch = curl_init('https://api.openai.com/v1/responses');
 curl_setopt_array($ch, [
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_POST => true,
@@ -27,14 +52,48 @@ curl_setopt_array($ch, [
     'Content-Type: application/json',
     'Authorization: Bearer ' . $apiKey
   ],
-  CURLOPT_POSTFIELDS => json_encode($data)
+  CURLOPT_POSTFIELDS => json_encode($data),
+//  CURLOPT_TIMEOUT => 30,
+
+  CURLOPT_SSL_VERIFYPEER => false, // 👈 ADD
+  CURLOPT_SSL_VERIFYHOST => false  // 👈 ADD
 ]);
 
 $response = curl_exec($ch);
+
+if ($response === false) {
+  echo json_encode(['error' => curl_error($ch)]);
+  exit;
+}
+
 curl_close($ch);
 
 $res = json_decode($response, true);
 
+// ================== ERROR FROM OPENAI ==================
+if (isset($res['error'])) {
+  echo json_encode([
+    'error' => $res['error']['message'],
+    'raw' => $res
+  ]);
+  exit;
+}
+
+// ================== GET TEXT ==================
+$text = '';
+
+foreach ($res['output'] as $item) {
+  if ($item['type'] === 'message') {
+    foreach ($item['content'] as $c) {
+      if ($c['type'] === 'output_text') {
+        $text .= $c['text'];
+      }
+    }
+  }
+}
+
 echo json_encode([
-  'result' => $res['choices'][0]['message']['content'] ?? 'AI không trả kết quả'
+  'success' => true,
+  'result' => $text,
+  'raw' => $res
 ]);

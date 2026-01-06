@@ -630,6 +630,7 @@ function price($p): string
 
     const data = await res.json();
     document.getElementById('aiResult').innerText = data.result;
+    console.log(data);
   }
 </script>
 </body>
