@@ -143,8 +143,8 @@ function price($p): string
 <?php include 'cornerButton.php'?>
 <body>
 <div class="container">
-  <header>
-    <h1><i class="fas fa-balance-scale"></i> So sánh sản phẩm</h1>
+  <div class="top-content">
+    <h1>So sánh sản phẩm</h1>
     <p>So sánh chi tiết hai sản phẩm để đưa ra lựa chọn tốt nhất</p>
 
     <div class="compare-actions-div">
@@ -155,7 +155,7 @@ function price($p): string
         <i class="fas fa-trash"></i> Xóa so sánh
       </button>
     </div>
-  </header>
+  </div>
 
   <div class="compare-grid">
     <!-- Sản phẩm bên trái -->
@@ -185,7 +185,7 @@ function price($p): string
           <?php endif; ?>
         </div>
 
-        <div class="thumbnail-container">
+        <div class="thumbnail-container" id="thumbnail-left">
           <?php if (!empty($left['images'])): ?>
             <?php foreach ($left['images'] as $index => $image): ?>
               <div class="thumbnail <?php echo $index === 0 ? 'active' : ''; ?>"
@@ -295,11 +295,8 @@ function price($p): string
         </div>
 
         <div class="product-actions">
-          <button class="btn btn-primary btn-small" onclick="viewProduct('<?php echo $left['slug']; ?>')">
+          <button class="btn btn-primary btn-small" onclick="viewProduct('<?php echo $left['id']; ?>')">
             <i class="fas fa-eye"></i> Xem chi tiết
-          </button>
-          <button class="btn btn-outline btn-small">
-            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
           </button>
         </div>
       </div>
@@ -318,21 +315,36 @@ function price($p): string
       </div>
 
       <div class="ai-content">
+
 <!--        <div class="ai-message">-->
 <!--          <h4><i class="fas fa-lightbulb"></i> Phân tích chung</h4>-->
 <!--          <p>Hệ thống AI đang phân tích và so sánh hai sản phẩm dựa trên thông số kỹ thuật, giá cả và đánh giá người dùng.</p>-->
 <!--        </div>-->
+        <div class="ai-features">
+          <button onclick="sendToAI(true)" class="ai-feature btn">
+            <i class="fa-solid fa-arrow-rotate-right"></i>Phân tích lại
+          </button>
+        </div>
+
+<!--        <div class="ai-loading" id="ai-loading">-->
+<!--          <div class="spinner"><i class="fa-solid fa-spinner fa-spin spinner"></i></div>-->
+<!--          <p>Đang phân tích sản phẩm...</p>-->
+<!--        </div>-->
 
         <div class="ai-loading" id="ai-loading">
-          <div class="spinner"></div>
-          <p>Đang phân tích sản phẩm...</p>
+          <div class="ai-spinner">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>AI đang phân tích sản phẩm…</p>
         </div>
 
         <div id="ai-results" style="display: none;">
           <!-- Kết quả AI sẽ được hiển thị ở đây -->
           <div class="ai-message">
             <h4><i class="fas fa-chart-line"></i>Gợi ý so sánh</h4>
-            <p id="aiResult">Vui lòng đợi AI phân tích</p>
+            <p class="ai-typing" id="aiResult">Vui lòng đợi AI phân tích</p>
           </div>
 
 <!--          <div class="ai-message">-->
@@ -492,11 +504,8 @@ function price($p): string
         </div>
 
         <div class="product-actions">
-          <button class="btn btn-primary btn-small" onclick="viewProduct('<?php echo $right['slug']; ?>')">
+          <button class="btn btn-primary btn-small" onclick="viewProduct('<?php echo $right['id']; ?>')">
             <i class="fas fa-eye"></i> Xem chi tiết
-          </button>
-          <button class="btn btn-outline btn-small">
-            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
           </button>
         </div>
       </div>
@@ -505,8 +514,6 @@ function price($p): string
 </div>
 
 <script>
-
-
   // Dữ liệu ảnh cho hai sản phẩm
   const productImages = {
     left: <?php echo json_encode($left['images'] ?? []); ?>,
@@ -535,15 +542,15 @@ function price($p): string
   }
 
   // Hàm xem chi tiết sản phẩm
-  function viewProduct(slug) {
-    window.location.href = `product-detail.php?slug=${slug}`;
+  function viewProduct(id) {
+    window.location.href = `product_detail.php?id=${id}`;
   }
 
   // Hàm xóa so sánh
   function clearComparison() {
     if (confirm('Bạn có chắc chắn muốn xóa so sánh này?')) {
       // Gửi yêu cầu xóa so sánh
-      fetch('clear_compare.php', {
+      fetch('apiPrivate/compare_clear.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -565,14 +572,8 @@ function price($p): string
   }
 
   // Mô phỏng quá trình AI phân tích
-  document.addEventListener('DOMContentLoaded', function() {
-
-    sendToAI();
-    // Hiển thị kết quả AI sau 2 giây
-    setTimeout(() => {
-      document.getElementById('ai-loading').style.display = 'none';
-      document.getElementById('ai-results').style.display = 'block';
-    }, 2000);
+  document.addEventListener('DOMContentLoaded', () => {
+    sendToAI(false);
   });
 
   // Tạo hiệu ứng particles cho cột AI
@@ -584,7 +585,7 @@ function price($p): string
     container.innerHTML = '';
 
     // Tạo 15 particles
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 100; i++) {
       const particle = document.createElement('div');
       particle.classList.add('particle');
 
@@ -595,12 +596,13 @@ function price($p): string
 
       // Random vị trí
       particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
 
       // Random độ trễ animation
       particle.style.animationDelay = `${Math.random() * 30}s`;
 
       // Random thời gian animation
-      const duration = Math.random() * 10 + 100;
+      const duration = Math.random() * 10 + 10;
       particle.style.animationDuration = `${duration}s`;
 
       container.appendChild(particle);
@@ -612,26 +614,143 @@ function price($p): string
     createParticles();
 
     // Tạo lại particles mỗi 15 giây để đa dạng
-    setInterval(createParticles, 15000);
+    setInterval(createParticles, 10000);
   });
 </script>
 
 <script>
-  async function sendToAI() {
-    const res = await fetch('apiPrivate/ai_compare.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        prompt: "So sánh iPhone 14 và iPhone 15, cái nào đáng mua hơn?"
-      })
-    });
+  const products = <?= json_encode($products, JSON_UNESCAPED_UNICODE) ?>;
 
-    const data = await res.json();
-    document.getElementById('aiResult').innerText = data.result;
-    console.log(data);
+  function buildComparePrompt(products) {
+    if (!Array.isArray(products) || products.length !== 2) {
+      throw new Error('Cần đúng 2 sản phẩm để so sánh');
+    }
+
+    const [p1, p2] = products;
+
+    return `
+      Bạn là chuyên gia tư vấn mua sắm công nghệ.
+
+      Hãy so sánh CHI TIẾT 2 sản phẩm sau và đưa ra kết luận rõ ràng.
+
+      YÊU CẦU:
+      - So sánh dựa trên: giá, thông số kỹ thuật, tình trạng kho, đánh giá người dùng
+      - Chỉ ra ưu / nhược điểm từng sản phẩm
+      - Kết luận: nên chọn sản phẩm nào và vì sao
+      - Trả lời bằng tiếng Việt, ngắn gọn dễ hiểu, không dùng markdown
+
+      ====================
+      SẢN PHẨM 1
+      ====================
+      Tên: ${p1.name}
+      Thương hiệu: ${p1.brand?.name ?? 'Không rõ'}
+      Giá niêm yết: ${p1.price.regular}
+      Giá bán: ${p1.price.sale > 0 ? p1.price.sale : p1.price.regular}
+      Tồn kho: ${p1.stock.quantity} (${p1.stock.status})
+      Đánh giá: ${p1.rating.rate}/5 (${p1.rating.num_buy} lượt mua)
+      Mô tả ngắn: ${p1.short_description}
+
+      Thông số kỹ thuật:
+      ${Object.entries(p1.specifications)
+            .map(([k, v]) => `- ${k}: ${v}`)
+            .join('\n')}
+
+      ====================
+      SẢN PHẨM 2
+      ====================
+      Tên: ${p2.name}
+      Thương hiệu: ${p2.brand?.name ?? 'Không rõ'}
+      Giá niêm yết: ${p2.price.regular}
+      Giá bán: ${p2.price.sale > 0 ? p2.price.sale : p2.price.regular}
+      Tồn kho: ${p2.stock.quantity} (${p2.stock.status})
+      Đánh giá: ${p2.rating.rate}/5 (${p2.rating.num_buy} lượt mua)
+      Mô tả ngắn: ${p2.short_description}
+
+      Thông số kỹ thuật:
+      ${Object.entries(p2.specifications)
+            .map(([k, v]) => `- ${k}: ${v}`)
+            .join('\n')}
+
+      ====================
+      KẾT LUẬN CUỐI:
+      Sản phẩm nào phù hợp hơn với người dùng phổ thông? Vì sao?
+      `.trim();
   }
+
+  async function sendToAI(force = false) {
+    try {
+      // (optional) show loading
+      showAILoading();
+
+      const prompt = buildComparePrompt(products);
+      console.log(prompt);
+
+      const res = await fetch('apiPrivate/ai_compare.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          force: force // 👈 key quan trọng
+        })
+      });
+
+      const data = await res.json();
+      console.log('AI RESPONSE:', data);
+
+      if (data.error) {
+        document.getElementById('aiResult').innerText =
+          'Lỗi AI: ' + data.error;
+        return;
+      }
+
+      // document.getElementById('aiResult').innerText = data.result;
+      showAIResult();
+
+      const el = document.getElementById('aiResult');
+      typeText(el, data.result);
+
+      // (optional) thông báo cache
+      if (data.cached) {
+        console.log('Dùng kết quả AI từ session');
+      } else {
+        console.log('AI vừa phân tích mới');
+      }
+
+    } catch (err) {
+      document.getElementById('aiResult').innerText =
+        'Không thể kết nối AI';
+      console.error(err);
+    }
+  }
+
+  function typeText(element, text, speed = 5) {
+    let i = 0;
+    element.textContent = '';
+    element.classList.add('cursor');
+
+    const typing = setInterval(() => {
+      element.textContent += text.charAt(i);
+      i++;
+
+      if (i >= text.length) {
+        clearInterval(typing);
+        element.classList.remove('cursor');
+      }
+    }, speed);
+  }
+
+  function showAILoading() {
+    document.getElementById('ai-loading').style.display = 'flex';
+    document.getElementById('ai-results').style.display = 'none';
+  }
+
+  function showAIResult() {
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-results').style.display = 'block';
+  }
+
 </script>
 </body>
 
