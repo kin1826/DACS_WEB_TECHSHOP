@@ -504,7 +504,9 @@
   document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('goCompareBtn').onclick = () => {
-      window.location.href = 'compare.php';
+      // window.location.href = 'compare.php';
+      // e.preventDefault();
+      window.open('compare.php', '_blank', 'noopener');
     };
 
     document.getElementById('clearCompareBtn')

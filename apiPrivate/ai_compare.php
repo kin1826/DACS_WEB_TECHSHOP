@@ -1,8 +1,21 @@
 <?php
+session_start();
 header('Content-Type: application/json');
+$input = json_decode(file_get_contents('php://input'), true);
+
+if (!empty($input['force'])) {
+  unset($_SESSION['ai_compare_result']);
+}
+
+if (isset($_SESSION['ai_compare_result'])) {
+  echo json_encode([
+    'cached' => true,
+    'result' => $_SESSION['ai_compare_result']
+  ]);
+  exit;
+}
 
 // ================== INPUT ==================
-$input = json_decode(file_get_contents('php://input'), true);
 $prompt = $input['prompt'] ?? '';
 
 if (!$prompt) {
@@ -91,6 +104,8 @@ foreach ($res['output'] as $item) {
     }
   }
 }
+
+$_SESSION['ai_compare_result'] = $text;
 
 echo json_encode([
   'success' => true,
