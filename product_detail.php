@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'] ?? null;
 
 require_once 'class/product.php';
 require_once 'class/product_image.php';
@@ -226,8 +226,12 @@ if (!empty($_GET['id'])) {
   <meta name="theme-color" content="#fafafa">
 </head>
 
-<?php include 'header.php'; ?>
-<?php include 'cornerButton.php'?>
+<?php
+const PAGE_CONTEXT = 'product_detail';
+define('CURRENT_PRODUCT_NAME', $product['name_pr']); // nếu cần
+
+include 'header.php';
+include 'cornerButton.php'?>
 
 <body>
 

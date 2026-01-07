@@ -8,9 +8,6 @@ $product = new Product();
 $totalPro = $product->getTotalProducts();
 $bestSeller = $product->getBestSellers();
 
-$a = $bestSeller['0'];
-print_r($a['name_pr']);
-
 $topProducts = [];
 
 foreach ($bestSeller as $item) {
@@ -20,8 +17,6 @@ foreach ($bestSeller as $item) {
     'revenue' => (int)$item['sale_price'] * (int)$item['num_buy']
   ];
 }
-
-print_r($topProducts);
 
 global $userModel;
 $totalUsers = $userModel->count();

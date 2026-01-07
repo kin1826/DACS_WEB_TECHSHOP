@@ -1,4 +1,15 @@
-<!-- cornerButton.php -->
+<?php
+$isProductDetail = defined('PAGE_CONTEXT') && PAGE_CONTEXT === 'product_detail';
+$productName = "";
+
+if ($isProductDetail) {
+  $productName = defined('CURRENT_PRODUCT_NAME') ? CURRENT_PRODUCT_NAME : "";
+}
+?>
+
+<!--
+
+ cornerButton.php -->
 <div class="corner-container">
   <!-- Nút chính ở góc -->
   <button class="corner-main-btn" id="cornerMainBtn">
@@ -40,9 +51,24 @@
   <div class="chat-popup" id="chatPopup">
     <div class="chat-header">
       <h3>Chat hỗ trợ</h3>
+      <label>
+        <input type="checkbox" class="ui-checkbox" checked>
+        Chat với AI
+        <span class="tooltip">
+          <i class="fa-solid fa-circle-question"></i>
+          <span class="tooltip-box">
+            <h3>Chế độ chat với AI</h3>
+          Khi bật: Bạn sẽ được tư vấn bởi AI
+          Khi tắt: Bạn sẽ trò chuyện trực tiếp với người bán hàng
+          *Mẹo: Vào xem 1 sản phẩm sẽ được tư vấn chi tiết về sản phẩm đó.
+          </span>
+        </span>
+      </label>
       <button class="close-btn">&times;</button>
     </div>
     <div class="chat-messages" id="chatMessages">
+
+
       <!-- Tin nhắn sẽ hiển thị ở đây -->
       <div class="message bot-message">
         <div class="message-content">
@@ -51,6 +77,11 @@
         <div class="message-time">10:00</div>
       </div>
     </div>
+    <?php if ($isProductDetail): ?>
+    <button class="chat-floating-btn" id="learnMoreProductBtn">
+      🔍 Xem thêm về sản phẩm <?php echo htmlspecialchars($productName)?>
+    </button>
+    <?php endif;?>
     <div class="chat-input-container">
       <input type="text" id="chatInput" placeholder="Nhập tin nhắn...">
       <button class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
@@ -106,18 +137,6 @@
       type: "bot",
       content: "Xin chào! Tôi có thể giúp gì cho bạn?",
       time: "10:00"
-    },
-    {
-      id: 2,
-      type: "user",
-      content: "Tôi muốn hỏi về chính sách vận chuyển",
-      time: "10:01"
-    },
-    {
-      id: 3,
-      type: "bot",
-      content: "Chúng tôi miễn phí vận chuyển cho đơn hàng từ 500K. Thời gian giao hàng từ 2-5 ngày làm việc.",
-      time: "10:02"
     }
   ];
 
@@ -201,6 +220,9 @@
 
   // Gửi tin nhắn khi nhấn nút
   document.querySelector('.chat-send-btn').addEventListener('click', sendMessage);
+  document
+    .querySelector('.chat-floating-btn')
+    .addEventListener('click', () => sendMessage(true));
 
   let searchTimer;
 
@@ -305,36 +327,173 @@
     scrollChatToBottom();
   }
 
-  // Hàm gửi tin nhắn
-  function sendMessage() {
+  function createAITypingMessage() {
+    return {
+      id: 'ai_typing',
+      type: 'bot',
+      content: `
+      <div class="ai-typing">
+        <span></span><span></span><span></span>
+      </div>
+    `,
+      time: getCurrentTime(),
+      typing: true
+    };
+  }
+
+  function buildChatPrompt(message) {
+    return `
+        Bạn là trợ lý tư vấn bán hàng và hỗ trợ khách hàng.
+
+        QUY TẮC TRẢ LỜI:
+        - Nếu câu hỏi ngắn, đơn giản, hỏi nhanh → trả lời NGẮN GỌN (3 - 5 câu).
+        - Nếu người dùng hỏi tư vấn, đánh giá, so sánh → trả lời CHI TIẾT, rõ ràng.
+        - Nếu câu hỏi liên quan đến sản phẩm → phân tích theo các TIÊU CHÍ phù hợp.
+        - Trả lời đúng trọng tâm, không lan man.
+        - Nếu người dùng chào thì phải chào lại và giới thiệu "Mình là Tech AI, mình sẽ hỗ trợ giải đáp mọi thắc về các sản phẩm và kiến thức công nghệ cho bạn."
+        - Nếu người dùng hỏi hoặc nói gì liên quan đến so sánh giữa 2 sản phẩm thì có thể hướng dẫn như sau: "Trang web của mình có hỗ trợ so sánh 2 sản phẩm với công cụ so sánh. Bạn có thể chọn 2 sản phẩm để tự so sánh hoặc tham khảo qua AI gợi ý nhé!".
+        - Dùng tiếng Việt tự nhiên, dễ hiểu, thân thiện.
+        - KHÔNG DÙNG MARKDOWN.
+
+        KHI HỎI VỀ SẢN PHẨM, ƯU TIÊN CÁC TIÊU CHÍ SAU (tùy ngữ cảnh):
+        - Hiệu năng / cấu hình
+        - Mức độ phù hợp với nhu cầu (học tập, làm việc, chơi game, v.v.)
+        - Điểm mạnh
+        - Hạn chế (nếu có)
+        - Đối tượng nên dùng
+
+        CÂU HỎI NGƯỜI DÙNG:
+        "${message}"
+
+        Hãy trả lời phù hợp với câu hỏi trên.
+          `.trim();
+  }
+
+  function buildLearnMorePrompt(productName) {
+    return `
+      Bạn là trợ lý tư vấn sản phẩm công nghệ.
+
+      Người dùng muốn tìm hiểu thêm về sản phẩm: "${productName}"
+
+      YÊU CẦU:
+      1. Giới thiệu ngắn gọn sản phẩm (1–2 câu).
+      2. Đánh giá nhanh:
+         - Phù hợp với nhu cầu nào
+         - Ưu điểm nổi bật
+         - Hạn chế (nếu có)
+      3. Gợi ý video review:
+         - YouTube: chỉ đưa LINK (nếu không có link cụ thể, đưa link tìm kiếm).
+         - TikTok: chỉ đưa LINK (nếu không có link cụ thể, đưa link tìm kiếm).
+
+      QUY ĐỊNH TRẢ LỜI:
+      - KHÔNG markdown.
+      - embed video nếu có link. (Thẻ <a>)
+      - Trình bày gọn gàng, dễ đọc.
+      - Không xuống dòng dư thừa.
+
+      Hãy trả lời đúng theo yêu cầu trên.
+        `.trim();
+  }
+
+
+  async function sendMessage(is_btn = false) {
     const message = chatInput.value.trim();
+    if (!message && !is_btn) return;
 
-    if (!message) return;
-
-    // Thêm tin nhắn người dùng
-    const userMessage = {
+    // 1️⃣ message user
+    chatMessages.push({
       id: chatMessages.length + 1,
       type: 'user',
       content: message,
       time: getCurrentTime()
-    };
-
-    chatMessages.push(userMessage);
+    });
     renderChatMessages();
     chatInput.value = '';
 
-    // Phản hồi tự động (simulate bot)
-    setTimeout(() => {
-      const botResponse = {
+    // 2️⃣ check AI mode
+    const isAI = document.querySelector('.ui-checkbox')?.checked;
+
+    // ❌ không bật AI → bot giả
+    if (!isAI) {
+      setTimeout(() => {
+        chatMessages.push({
+          id: chatMessages.length + 1,
+          type: 'bot',
+          content: getBotResponse(message),
+          time: getCurrentTime()
+        });
+        renderChatMessages();
+      }, 800);
+      return;
+    }
+
+    try {
+      let prompt = buildChatPrompt(message);
+
+      if (is_btn) {
+        const btn_text = document.getElementById('learnMoreProductBtn').textContent.trim();
+
+        chatMessages.push({
+          id: chatMessages.length + 1,
+          type: 'user',
+          content: btn_text,
+          time: getCurrentTime()
+        });
+        renderChatMessages();
+
+        prompt = buildLearnMorePrompt(<?php echo json_encode($productName, JSON_UNESCAPED_UNICODE); ?>)
+
+        // 3️⃣ hiện "AI đang xử lý" (3 chấm)
+        chatMessages.push(createAITypingMessage());
+        renderChatMessages();
+      }
+
+      // 4️⃣ gọi API
+      const res = await fetch('apiPrivate/ai_chat.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: prompt
+        })
+      });
+
+      const data = await res.json();
+
+      console.log(data.result);
+
+      // 5️⃣ gỡ "AI đang xử lý"
+      const typingIndex = chatMessages.findIndex(m => m.id === 'ai_typing');
+      if (typingIndex !== -1) chatMessages.splice(typingIndex, 1);
+
+      // 6️⃣ hiện kết quả AI (FULL – không typing)
+      chatMessages.push({
         id: chatMessages.length + 1,
         type: 'bot',
-        content: getBotResponse(message),
+        content: data.error
+          ? '⚠️ Lỗi AI: ' + data.error
+          : data.result,
         time: getCurrentTime()
-      };
+      });
 
-      chatMessages.push(botResponse);
       renderChatMessages();
-    }, 1000);
+
+    } catch (err) {
+      // gỡ typing nếu lỗi
+      const typingIndex = chatMessages.findIndex(m => m.id === 'ai_typing');
+      if (typingIndex !== -1) chatMessages.splice(typingIndex, 1);
+
+      chatMessages.push({
+        id: chatMessages.length + 1,
+        type: 'bot',
+        content: '❌ Không thể kết nối AI',
+        time: getCurrentTime()
+      });
+
+      renderChatMessages();
+      console.error(err);
+    }
   }
 
   // Hàm lấy phản hồi từ bot (đơn giản)
