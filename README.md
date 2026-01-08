@@ -70,7 +70,7 @@ https://techshop-demo.vercel.app
 
 ---
 
-## 🧱 Công nghệ sử dụng (GỢI Ý – bạn chỉnh lại cho đúng project)
+## 🧱 Công nghệ sử dụng
 - Frontend: Html / Css /JS thuần
 - Backend: PHP thuần
 - Database: MySQL
@@ -92,8 +92,3 @@ https://techshop-demo.vercel.app
 ## 👨‍🎓 Thông tin sinh viên
 - Họ và tên: Trần Văn Bằng
 - Lớp: 24GT
-
----
-
-## 📄 Ghi chú
-Dự án được thực hiện với mục đích **học tập và nghiên cứu**, không sử dụng cho mục đích thương mại.
