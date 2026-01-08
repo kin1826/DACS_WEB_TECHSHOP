@@ -11,6 +11,10 @@ https://techshop-demo.vercel.app
 
 ### Điểm số: 9.5 / 10
 
+### 👨‍🎓 Thông tin sinh viên
+- Họ và tên: Trần Văn Bằng
+- Lớp: 24GT
+
 ---
 
 ## ✨ Chức năng nổi bật
@@ -86,9 +90,3 @@ https://techshop-demo.vercel.app
 - Chat AI theo lịch sử mua hàng của người dùng
 - Tối ưu SEO và hiệu suất website
 - Triển khai bản mobile-friendly hoàn chỉnh
-
----
-
-## 👨‍🎓 Thông tin sinh viên
-- Họ và tên: Trần Văn Bằng
-- Lớp: 24GT
