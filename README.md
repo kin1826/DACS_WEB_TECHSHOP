@@ -9,6 +9,8 @@ Website hướng tới trải nghiệm người dùng thân thiện, hiện đ�
 🔗 **Link website (Chưa up lên hosting):**  
 https://techshop-demo.vercel.app  
 
+### Điểm số: 9.5 / 10
+
 ---
 
 ## ✨ Chức năng nổi bật
